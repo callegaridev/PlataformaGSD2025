@@ -1,3 +1,5 @@
+const escapeHtml = window.gsdEscapeHtml;
+
 // Recebe o setor dinamicamente, por exemplo, via localStorage ou query string
 
 // ...existing code...
@@ -75,9 +77,9 @@ function inicializarMenuCoordenador(setor) {
   menu.forEach(item => {
     const li = document.createElement('li');
     li.innerHTML = `
-      <a href="${item.href}" class="flex items-center gap-3 py-2 px-4 rounded-lg hover:bg-blue-700 transition">
+      <a href="${escapeHtml(item.href)}" class="flex items-center gap-3 py-2 px-4 rounded-lg hover:bg-blue-700 transition">
         ${item.icone}
-        <span>${item.nome}</span>
+        <span>${escapeHtml(item.nome)}</span>
       </a>
     `;
     ul.appendChild(li);
@@ -129,9 +131,9 @@ async function carregarArquivos() {
 
     const lista = arquivos.map(arq => `
       <div class="bg-gray-50 border rounded-lg p-4 shadow hover:shadow-lg transition">
-        <h3 class="font-semibold text-blue-800">${arq.nome_original}</h3>
-        <p class="text-gray-600 text-sm">Data de upload: ${new Date(arq.data_upload).toLocaleString()}</p>
-                <a href="${window.location.origin}/uploads/${arq.nome_armazenado}" class="text-blue-600 hover:underline font-semibold" download>
+        <h3 class="font-semibold text-blue-800">${escapeHtml(arq.nome_original)}</h3>
+        <p class="text-gray-600 text-sm">Data de upload: ${escapeHtml(new Date(arq.data_upload).toLocaleString())}</p>
+                <a href="${escapeHtml(arq.url)}" class="text-blue-600 hover:underline font-semibold" download>
           Baixar Arquivo
         </a>
       </div>
@@ -185,10 +187,10 @@ async function carregarTarefas() {
 
     const lista = tarefas.map(tarefa => `
       <div class="bg-gray-50 border rounded-lg p-4 shadow hover:shadow-lg transition">
-        <h3 class="font-semibold text-blue-800">${tarefa.titulo}</h3>
-        <p class="text-gray-600 text-sm">${tarefa.descricao}</p>
-        <p class="text-gray-500 text-xs">Data limite: ${tarefa.data_limite}</p>
-        <button class="concluir-tarefa bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg mt-2 transition" data-id="${tarefa.id}">
+        <h3 class="font-semibold text-blue-800">${escapeHtml(tarefa.titulo)}</h3>
+        <p class="text-gray-600 text-sm">${escapeHtml(tarefa.descricao)}</p>
+        <p class="text-gray-500 text-xs">Data limite: ${escapeHtml(tarefa.data_limite)}</p>
+        <button class="concluir-tarefa bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg mt-2 transition" data-id="${escapeHtml(tarefa.id)}">
           Concluir
         </button>
       </div>
@@ -332,10 +334,10 @@ async function carregarRelatoriosAtualizados() {
 
     const lista = relatoriosFiltrados.map(relatorio => `
       <div class="bg-gray-50 border rounded-lg p-4 shadow hover:shadow-lg transition">
-        <h3 class="font-semibold text-blue-800">${relatorio.tipo}</h3>
-        <p class="text-gray-600 text-sm">${relatorio.projeto}</p>
-        <p class="text-gray-500 text-xs">Status: ${relatorio.status}</p>
-        <p class="text-gray-500 text-xs">Observação: ${relatorio.observacao || 'Nenhuma'}</p>
+        <h3 class="font-semibold text-blue-800">${escapeHtml(relatorio.tipo)}</h3>
+        <p class="text-gray-600 text-sm">${escapeHtml(relatorio.projeto)}</p>
+        <p class="text-gray-500 text-xs">Status: ${escapeHtml(relatorio.status)}</p>
+        <p class="text-gray-500 text-xs">Observação: ${escapeHtml(relatorio.observacao || 'Nenhuma')}</p>
       </div>
     `).join('');
 
@@ -396,10 +398,10 @@ async function carregarRanking() {
         ${ranking.map((u, i) => `
           <tr class="${i === 0 ? 'bg-yellow-50 font-bold' : ''}">
             <td class="border-t px-4 py-2">${i + 1} ${i === 0 ? '🏆' : i === 1 ? '🥈' : i === 2 ? '🥉' : ''}</td>
-            <td class="border-t px-4 py-2">${u.name}</td>
-            <td class="border-t px-4 py-2">${u.presencas}</td>
-            <td class="border-t px-4 py-2">${u.tarefas_concluidas}</td>
-            <td class="border-t px-4 py-2 text-yellow-600">${u.pontos}</td>
+            <td class="border-t px-4 py-2">${escapeHtml(u.name)}</td>
+            <td class="border-t px-4 py-2">${escapeHtml(u.presencas)}</td>
+            <td class="border-t px-4 py-2">${escapeHtml(u.tarefas_concluidas)}</td>
+            <td class="border-t px-4 py-2 text-yellow-600">${escapeHtml(u.pontos)}</td>
           </tr>
         `).join('')}
       </tbody>
@@ -475,7 +477,7 @@ async function carregarCantina() {
     const form = e.target;
 
     try {
-      const response = await fetch('http://localhost:3000/api/produtos', {
+      const response = await fetch('/api/produtos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -499,15 +501,16 @@ async function carregarCantina() {
 
   // Carrega o estoque e o painel de venda
   try {
-    const res = await fetch('http://localhost:3000/api/produtos');
+    const res = await fetch('/api/produtos');
+    if (!res.ok) throw new Error('Não foi possível carregar os produtos.');
     const produtos = await res.json();
 
     // Atualiza o estoque
     const estoque = produtos.map(produto => `
       <div class="bg-gray-50 border rounded-lg p-4 shadow hover:shadow-lg transition">
-        <h3 class="font-semibold text-blue-800">${produto.nome}</h3>
-        <p class="text-gray-600 text-sm">Preço: R$ ${produto.preco.toFixed(2)}</p>
-        <p class="text-gray-500 text-xs">Quantidade: ${produto.quantidade}</p>
+        <h3 class="font-semibold text-blue-800">${escapeHtml(produto.nome)}</h3>
+        <p class="text-gray-600 text-sm">Preço: R$ ${escapeHtml(produto.preco.toFixed(2))}</p>
+        <p class="text-gray-500 text-xs">Quantidade: ${escapeHtml(produto.quantidade)}</p>
       </div>
     `).join('');
 
@@ -515,17 +518,26 @@ async function carregarCantina() {
 
     // Atualiza o painel de venda
     const painelVenda = produtos.map(produto => `
-      <button class="produto-venda bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded-lg font-semibold transition" data-id="${produto.id}" data-preco="${produto.preco}">
-        ${produto.nome} - R$ ${produto.preco.toFixed(2)}
+      <button class="produto-venda bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded-lg font-semibold transition" data-id="${escapeHtml(produto.id)}" data-preco="${escapeHtml(produto.preco)}">
+        ${escapeHtml(produto.nome)} - R$ ${escapeHtml(produto.preco.toFixed(2))}
       </button>
     `).join('');
 
     document.getElementById('painel-venda').innerHTML = painelVenda || "<p class='text-gray-500'>Nenhum produto disponível.</p>";
 
+    const cart = new Map();
     let total = 0;
     document.querySelectorAll('.produto-venda').forEach(button => {
       button.addEventListener('click', function () {
+        const id = Number(this.getAttribute('data-id'));
         const preco = parseFloat(this.getAttribute('data-preco'));
+        const product = produtos.find(item => item.id === id);
+        const quantity = (cart.get(id) || 0) + 1;
+        if (!product || quantity > product.quantidade) {
+          alert('Estoque insuficiente para este produto.');
+          return;
+        }
+        cart.set(id, quantity);
         total += preco;
         document.getElementById('troco').textContent = `Total: R$ ${total.toFixed(2)}`;
       });
@@ -533,18 +545,31 @@ async function carregarCantina() {
 
     document.getElementById('finalizar-venda').addEventListener('click', async function () {
       const valorRecebido = parseFloat(document.getElementById('valor-recebido').value);
-      const troco = valorRecebido - total;
-
-      if (troco < 0) {
-        alert('Valor recebido insuficiente!');
+      if (!Number.isFinite(valorRecebido) || !cart.size) {
+        alert('Selecione produtos e informe o valor recebido.');
         return;
       }
 
-      alert(`Venda finalizada! Troco: R$ ${troco.toFixed(2)}`);
-      total = 0; // Reseta o total
-      document.getElementById('troco').textContent = "";
-      document.getElementById('valor-recebido').value = "";
-      carregarCantina(); // Atualiza a tela
+      try {
+        const response = await fetch('/api/vendas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            produtos: [...cart].map(([id, quantidade]) => ({ id, quantidade })),
+            valorRecebido
+          })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Não foi possível registrar a venda.');
+        alert(`Venda registrada! Troco: R$ ${Number(result.troco).toFixed(2)}`);
+        cart.clear();
+        total = 0;
+        document.getElementById('troco').textContent = '';
+        document.getElementById('valor-recebido').value = '';
+        await carregarCantina();
+      } catch (error) {
+        alert(error.message);
+      }
     });
   } catch (err) {
     console.error('Erro ao carregar produtos:', err);
@@ -581,19 +606,14 @@ async function carregarComissoes() {
   `;
 
   try {
-    const res = await fetch('http://localhost:3000/api/comissoes');
+    const res = await fetch('/api/comissoes');
     const comissoes = await res.json();
-    const userEmail = localStorage.getItem('userEmail');
-
-    // Filtra as comissões em que o coordenador participa
-    const minhasComissoes = comissoes.filter(comissao =>
-      comissao.membros && comissao.membros.includes(userEmail)
-    );
+    const minhasComissoes = comissoes;
 
     const lista = minhasComissoes.map(comissao => `
       <div class="bg-gray-50 border rounded-lg p-4 shadow hover:shadow-lg transition">
-        <h3 class="font-semibold text-purple-800">${comissao.nome}</h3>
-        <p class="text-gray-600 text-sm">${comissao.descricao || ''}</p>
+        <h3 class="font-semibold text-purple-800">${escapeHtml(comissao.nome)}</h3>
+        <p class="text-gray-600 text-sm">${escapeHtml(comissao.descricao || '')}</p>
       </div>
     `).join('');
 
@@ -612,10 +632,10 @@ async function carregarInicioCoordenador() {
 
   // Busca dados em paralelo
   const [tarefasResp, rankingResp, eventosResp, comissoesResp] = await Promise.all([
-    fetch('http://localhost:3000/api/tarefas'),
+    fetch('/api/tarefas'),
     fetch('/api/ranking'),
     fetch('/api/eventos'),
-    fetch('http://localhost:3000/api/comissoes')
+    fetch('/api/comissoes')
   ]);
   const tarefas = await tarefasResp.json();
   const ranking = await rankingResp.json();
@@ -624,9 +644,9 @@ async function carregarInicioCoordenador() {
 
   // Dados do usuário logado
   const userId = localStorage.getItem('userId');
-  const userEmail = localStorage.getItem('userEmail');
-  const usuarioRanking = ranking.find(u => u.email === userEmail) || {};
-  const minhasComissoes = comissoes.filter(c => c.membros && c.membros.includes(userEmail));
+  const rankingIndex = ranking.findIndex(user => String(user.id) === String(userId));
+  const usuarioRanking = rankingIndex < 0 ? {} : { ...ranking[rankingIndex], posicao: rankingIndex + 1 };
+  const minhasComissoes = comissoes;
   const minhasTarefasPendentes = tarefas.filter(t => t.status !== 'Concluída' && t.destinatario_id == userId);
 
   // Próximo evento do mês
@@ -645,17 +665,17 @@ async function carregarInicioCoordenador() {
       <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center">
         <span class="text-green-600 text-3xl font-bold">${eventosDoMes.length}</span>
         <span class="text-gray-700 mt-2 font-semibold">Eventos do Mês</span>
-        <span class="text-xs text-gray-500 mt-1">${proximoEvento ? `Próximo: ${proximoEvento.titulo} (${new Date(proximoEvento.inicio).toLocaleDateString()})` : 'Nenhum evento'}</span>
+        <span class="text-xs text-gray-500 mt-1">${proximoEvento ? `Próximo: ${escapeHtml(proximoEvento.titulo)} (${escapeHtml(new Date(proximoEvento.inicio).toLocaleDateString())})` : 'Nenhum evento'}</span>
       </div>
       <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center">
         <span class="text-purple-600 text-3xl font-bold">${minhasComissoes.length}</span>
         <span class="text-gray-700 mt-2 font-semibold">Comissões Ativas</span>
-        <span class="text-xs text-gray-500 mt-1">Membros envolvidos: ${minhasComissoes.reduce((acc, c) => acc + (c.membros?.length || 0), 0)}</span>
+        <span class="text-xs text-gray-500 mt-1">Membros envolvidos: ${minhasComissoes.reduce((acc, c) => acc + Number(c.membros_count || 0), 0)}</span>
       </div>
       <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center">
         <span class="text-yellow-500 text-3xl font-bold">${usuarioRanking.posicao || '-'}</span>
         <span class="text-gray-700 mt-2 font-semibold">Seu Ranking</span>
-        <span class="text-xs text-gray-500 mt-1">Pontos: ${usuarioRanking.pontos || 0}</span>
+        <span class="text-xs text-gray-500 mt-1">Pontos: ${escapeHtml(usuarioRanking.pontos || 0)}</span>
       </div>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -665,10 +685,10 @@ async function carregarInicioCoordenador() {
           ${minhasTarefasPendentes.slice(0, 5).map(t => `
             <div class="bg-gray-50 rounded-lg p-4 shadow flex items-center justify-between">
               <div>
-                <div class="font-semibold text-gray-800">${t.titulo}</div>
-                <div class="text-xs text-gray-500">Vence em ${t.data_limite ? Math.ceil((new Date(t.data_limite) - agora) / (1000*60*60*24)) : '-'} dias</div>
+                <div class="font-semibold text-gray-800">${escapeHtml(t.titulo)}</div>
+                <div class="text-xs text-gray-500">Vence em ${escapeHtml(t.data_limite ? Math.ceil((new Date(t.data_limite) - agora) / (1000*60*60*24)) : '-')} dias</div>
               </div>
-              <span class="text-xs px-2 py-1 rounded ${t.prioridade === 'Alta' ? 'bg-blue-100 text-blue-700' : t.prioridade === 'Média' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-700'}">${t.prioridade || 'Pendente'}</span>
+              <span class="text-xs px-2 py-1 rounded ${t.prioridade === 'Alta' ? 'bg-blue-100 text-blue-700' : t.prioridade === 'Média' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-700'}">${escapeHtml(t.prioridade || 'Pendente')}</span>
             </div>
           `).join('') || `<div class="text-gray-500">Nenhuma tarefa recente.</div>`}
         </div>
@@ -705,21 +725,19 @@ async function carregarInicioCoordenador() {
 
 // PERFIL DO COORDENADOR (nome, foto, upload e logout)
 window.addEventListener('DOMContentLoaded', async () => {
-  const nome = localStorage.getItem('nome'); // Salve o nome no login!
-  const email = localStorage.getItem('userEmail');
-  if (document.getElementById('nome-coordenador')) {
-    document.getElementById('nome-coordenador').textContent = nome || 'Coordenador';
-  }
-
-  // Busca foto do backend
   try {
-    const resp = await fetch(`${window.location.origin}/api/usuarios?email=${email}`);
-    const usuario = (await resp.json())[0];
+    const resp = await fetch('/api/me');
+    if (resp.status === 401) return window.location.replace('/login/index_login.html');
+    if (!resp.ok) throw new Error('Profile request failed.');
+    const usuario = await resp.json();
+    if (document.getElementById('nome-coordenador')) {
+      document.getElementById('nome-coordenador').textContent = usuario.name || 'Coordenador';
+    }
     if (usuario && usuario.foto_url && document.getElementById('avatar-coordenador')) {
       document.getElementById('avatar-coordenador').src = usuario.foto_url;
     }
-  } catch (e) {
-    // Se der erro, mantém o avatar padrão
+  } catch {
+    console.error('Could not load coordinator profile.');
   }
 });
 
@@ -750,9 +768,16 @@ if (document.getElementById('input-foto-perfil')) {
 
 // Logout
 if (document.getElementById('logout-btn')) {
-  document.getElementById('logout-btn').addEventListener('click', function () {
-    localStorage.clear();
-    window.location.href = '/index_login.html'; // Ajuste o caminho se necessário
+  document.getElementById('logout-btn').addEventListener('click', async function () {
+    try {
+      const response = await fetch('/api/logout', { method: 'POST' });
+      if (!response.ok) throw new Error('Logout request failed.');
+    } catch {
+      alert('Não foi possível confirmar o encerramento da sessão.');
+    } finally {
+      localStorage.clear();
+      window.location.href = '/login/index_login.html';
+    }
   });
 }
 

@@ -37,6 +37,12 @@
           </button>
         </div>
       </form>
+      <form id="password-reset-form" hidden>
+        <label for="new-password">Nova senha</label>
+        <input type="password" id="new-password" minlength="12" maxlength="128" autocomplete="new-password" required />
+        <button type="submit" class="btn-login">Redefinir senha</button>
+      </form>
+      <p id="login-message" role="status" aria-live="polite"></p>
     </div>
   </div>
   <script src="login.js"></script>

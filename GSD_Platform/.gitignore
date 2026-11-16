@@ -43,14 +43,22 @@ node_modules/
 
 # dotenv environment variables file
 .env
+.env.*
+!.env.example
 
 # Database
 database.db
 *.db
+*.db-shm
+*.db-wal
 
 # Uploads (opcional - remova se quiser versionar uploads)
 uploads/*
 !uploads/.gitkeep
+uploads-local/
+
+# Local environment and generated data
+backups/
 
 # OS generated files
 .DS_Store

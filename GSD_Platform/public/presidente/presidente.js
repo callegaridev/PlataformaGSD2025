@@ -1,3 +1,5 @@
+const escapeHtml = window.gsdEscapeHtml;
+
 // Função para carregar a interface de Registro de Reuniões
 function carregarRegistroReunioes() {
   document.getElementById('content').innerHTML = `
@@ -40,8 +42,8 @@ async function carregarListaChamada() {
     const listaChamada = document.getElementById('lista-chamada');
     listaChamada.innerHTML = usuarios.map(usuario => `
   <label class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 shadow-sm hover:bg-blue-50 transition">
-    <input type="checkbox" id="usuario-${usuario.id}" name="presenca" value="${usuario.id}" class="accent-blue-600 w-5 h-5 rounded">
-    <span class="text-gray-800 font-medium">${usuario.name}</span>
+    <input type="checkbox" id="usuario-${escapeHtml(usuario.id)}" name="presenca" value="${escapeHtml(usuario.id)}" class="accent-blue-600 w-5 h-5 rounded">
+    <span class="text-gray-800 font-medium">${escapeHtml(usuario.name)}</span>
   </label>
 `).join('');
   } catch (error) {
@@ -103,13 +105,13 @@ async function carregarReunioesSalvas() {
           <div id="lista-reunioes" class="space-y-4">
               ${reunioes.map(reuniao => `
                   <div class="p-4 border border-gray-300 rounded-md">
-                      <h3 class="text-lg font-bold">${reuniao.nome}</h3>
-                      <p class="text-sm text-gray-600">${reuniao.descricao}</p>
-                      <p class="text-sm text-gray-500">Data: ${new Date(reuniao.data_criacao).toLocaleString()}</p>
+                      <h3 class="text-lg font-bold">${escapeHtml(reuniao.nome)}</h3>
+                      <p class="text-sm text-gray-600">${escapeHtml(reuniao.descricao)}</p>
+                      <p class="text-sm text-gray-500">Data: ${escapeHtml(new Date(reuniao.data_criacao).toLocaleString())}</p>
                       <h4 class="text-sm font-bold mt-2">Presenças:</h4>
                       <ul class="list-disc pl-5">
                           ${reuniao.presencas.map(presenca => `
-                              <li>${presenca.usuario_nome} - ${presenca.status}</li>
+                              <li>${escapeHtml(presenca.usuario_nome)} - ${escapeHtml(presenca.status)}</li>
                           `).join('')}
                       </ul>
                   </div>
@@ -146,21 +148,21 @@ content.innerHTML = `
       ` : reunioes.map(r => `
         <div class="bg-white rounded-xl shadow p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div class="text-lg font-semibold text-blue-900">${r.nome}</div>
-            <div class="text-gray-600 text-sm mb-2">${r.descricao}</div>
-            <div class="text-xs text-gray-400">Data: ${new Date(r.data_criacao).toLocaleString()}</div>
+            <div class="text-lg font-semibold text-blue-900">${escapeHtml(r.nome)}</div>
+            <div class="text-gray-600 text-sm mb-2">${escapeHtml(r.descricao)}</div>
+            <div class="text-xs text-gray-400">Data: ${escapeHtml(new Date(r.data_criacao).toLocaleString())}</div>
             <div class="mt-2">
               <span class="font-bold text-sm text-gray-700">Presenças:</span>
               <ul class="list-disc pl-5">
                 ${r.presencas.map(p => `
-                  <li>${p.usuario_nome} - <span class="${p.status === 'presente' ? 'text-green-600' : 'text-red-600'}">${p.status}</span></li>
+                  <li>${escapeHtml(p.usuario_nome)} - <span class="${p.status === 'presente' ? 'text-green-600' : 'text-red-600'}">${escapeHtml(p.status)}</span></li>
                 `).join('')}
               </ul>
             </div>
           </div>
           <div class="flex gap-2">
-            <button onclick="editarReuniao(${r.id})" class="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded transition">Editar</button>
-            <button onclick="excluirReuniao(${r.id})" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition">Excluir</button>
+            <button onclick="editarReuniao(${escapeHtml(r.id)})" class="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded transition">Editar</button>
+            <button onclick="excluirReuniao(${escapeHtml(r.id)})" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition">Excluir</button>
           </div>
         </div>
       `).join('')}
@@ -208,13 +210,13 @@ async function editarReuniao(id) {
               <!-- Nome da Reunião -->
               <div>
                   <label for="nome-reuniao" class="block text-sm font-medium text-gray-700">Nome da Reunião</label>
-                  <input type="text" id="nome-reuniao" name="nome-reuniao" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" value="${reuniao.nome}" required>
+                  <input type="text" id="nome-reuniao" name="nome-reuniao" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" value="${escapeHtml(reuniao.nome)}" required>
               </div>
 
               <!-- Descrição -->
               <div>
                   <label for="descricao-reuniao" class="block text-sm font-medium text-gray-700">Descrição</label>
-                  <textarea id="descricao-reuniao" name="descricao-reuniao" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" required>${reuniao.descricao}</textarea>
+                  <textarea id="descricao-reuniao" name="descricao-reuniao" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" required>${escapeHtml(reuniao.descricao)}</textarea>
               </div>
 
               <!-- Lista de Chamada -->
@@ -223,8 +225,8 @@ async function editarReuniao(id) {
                   <div id="lista-chamada" class="space-y-2">
                       ${reuniao.presencas.map(presenca => `
                           <div class="flex items-center space-x-2">
-                              <input type="checkbox" id="usuario-${presenca.usuario_id}" name="presenca" value="${presenca.usuario_id}" class="h-4 w-4" ${presenca.status === 'presente' ? 'checked' : ''}>
-                              <label for="usuario-${presenca.usuario_id}" class="text-sm text-gray-700">${presenca.usuario_nome}</label>
+                              <input type="checkbox" id="usuario-${escapeHtml(presenca.usuario_id)}" name="presenca" value="${escapeHtml(presenca.usuario_id)}" class="h-4 w-4" ${presenca.status === 'presente' ? 'checked' : ''}>
+                              <label for="usuario-${escapeHtml(presenca.usuario_id)}" class="text-sm text-gray-700">${escapeHtml(presenca.usuario_nome)}</label>
                           </div>
                       `).join('')}
                   </div>
@@ -319,17 +321,17 @@ async function carregarRelatorios() {
           <tbody>
             ${relatorios.map(r => `
               <tr class="border-t">
-                <td class="px-4 py-2">${r.projeto}</td>
-                <td class="px-4 py-2">${r.tipo}</td>
-                <td class="px-4 py-2">${r.coordenador}</td>
+                <td class="px-4 py-2">${escapeHtml(r.projeto)}</td>
+                <td class="px-4 py-2">${escapeHtml(r.tipo)}</td>
+                <td class="px-4 py-2">${escapeHtml(r.coordenador)}</td>
                 <td class="px-4 py-2">
                   <span class="${r.status === 'Aprovado' ? 'text-green-600 font-semibold' : r.status === 'Recusado' ? 'text-red-600 font-semibold' : r.status === 'Ajustes Necessários' ? 'text-yellow-600 font-semibold' : 'text-gray-700'}">
-                    ${r.status}
+                    ${escapeHtml(r.status)}
                   </span>
                 </td>
-                <td class="px-4 py-2">${new Date(r.data_envio).toLocaleDateString()}</td>
+                <td class="px-4 py-2">${escapeHtml(new Date(r.data_envio).toLocaleDateString())}</td>
                 <td class="px-4 py-2 text-center">
-                  <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition" onclick="visualizarRelatorio(${r.id})">Ver</button>
+                  <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition" onclick="visualizarRelatorio(${escapeHtml(r.id)})">Ver</button>
                 </td>
               </tr>
             `).join('')}
@@ -367,18 +369,18 @@ async function visualizarRelatorio(id) {
       </h2>
       <div class="bg-gray-50 rounded-xl shadow p-6 mb-6">
         <div class="mb-2 flex gap-2 items-center">
-          <span class="font-semibold text-blue-900 text-lg">${relatorio.projeto}</span>
+          <span class="font-semibold text-blue-900 text-lg">${escapeHtml(relatorio.projeto)}</span>
           <span class="px-2 py-1 rounded text-xs font-semibold ${relatorio.status === 'Aprovado' ? 'bg-green-100 text-green-700' : relatorio.status === 'Recusado' ? 'bg-red-100 text-red-700' : relatorio.status === 'Ajustes Necessários' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-700'}">
-            ${relatorio.status}
+            ${escapeHtml(relatorio.status)}
           </span>
         </div>
-        <div class="mb-2 text-gray-700"><strong>Tipo:</strong> ${relatorio.tipo}</div>
-        <div class="mb-2 text-gray-700"><strong>Coordenador:</strong> ${relatorio.coordenador}</div>
-        <div class="mb-2 text-gray-700"><strong>Data de envio:</strong> ${relatorio.data_envio ? new Date(relatorio.data_envio).toLocaleString() : '-'}</div>
+        <div class="mb-2 text-gray-700"><strong>Tipo:</strong> ${escapeHtml(relatorio.tipo)}</div>
+        <div class="mb-2 text-gray-700"><strong>Coordenador:</strong> ${escapeHtml(relatorio.coordenador)}</div>
+        <div class="mb-2 text-gray-700"><strong>Data de envio:</strong> ${escapeHtml(relatorio.data_envio ? new Date(relatorio.data_envio).toLocaleString() : '-')}</div>
         <div class="mb-4 text-gray-700"><strong>Conteúdo:</strong><br>
-          <span class="whitespace-pre-line">${relatorio.conteudo}</span>
+          <span class="whitespace-pre-line">${escapeHtml(relatorio.conteudo)}</span>
         </div>
-        <div class="mb-2 text-gray-700"><strong>Observação:</strong> ${relatorio.observacao || '-'}</div>
+        <div class="mb-2 text-gray-700"><strong>Observação:</strong> ${escapeHtml(relatorio.observacao || '-')}</div>
       </div>
       <div class="flex flex-wrap gap-2 mb-2">
         <button onclick="atualizarStatusRelatorio(${id}, 'Aprovado')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition">Aprovar</button>
@@ -446,15 +448,15 @@ async function carregarComissoes() {
         ${comissoes.map(c => `
           <div class="bg-gray-50 rounded-xl shadow p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <div class="text-lg font-semibold text-blue-900">${c.nome}</div>
-              <div class="text-gray-600 text-sm mb-1">Tipo: ${c.tipo}</div>
-              <div class="text-gray-600 text-sm mb-1">Coordenador: ${c.coordenador_nome || '-'}</div>
-              <div class="text-xs text-gray-400">Data: ${new Date(c.data_criacao).toLocaleDateString()}</div>
+              <div class="text-lg font-semibold text-blue-900">${escapeHtml(c.nome)}</div>
+              <div class="text-gray-600 text-sm mb-1">Tipo: ${escapeHtml(c.tipo)}</div>
+              <div class="text-gray-600 text-sm mb-1">Coordenador: ${escapeHtml(c.coordenador_nome || '-')}</div>
+              <div class="text-xs text-gray-400">Data: ${escapeHtml(new Date(c.data_criacao).toLocaleDateString())}</div>
             </div>
             <div class="flex gap-2">
-              <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition" onclick="gerenciarMembrosComissao(${c.id}, '${c.nome}')">Ver/Editar Membros</button>
-              <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded transition" onclick="mostrarEditarComissao(${c.id})">Editar</button>
-              <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition" onclick="removerComissao(${c.id})">Excluir</button>
+              <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition" onclick="gerenciarMembrosComissao(${escapeHtml(c.id)})">Ver/Editar Membros</button>
+              <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded transition" onclick="mostrarEditarComissao(${escapeHtml(c.id)})">Editar</button>
+              <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition" onclick="removerComissao(${escapeHtml(c.id)})">Excluir</button>
             </div>
           </div>
         `).join('')}
@@ -493,7 +495,7 @@ async function mostrarFormularioComissao() {
           <label class="block mb-1 font-semibold text-gray-700">Coordenador Responsável</label>
           <select name="coordenador_id" class="border rounded-lg w-full p-2" required>
             <option value="">Selecione um usuário</option>
-            ${usuarios.map(u => `<option value="${u.id}">${u.name}</option>`).join('')}
+            ${usuarios.map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.name)}</option>`).join('')}
           </select>
         </div>
         <div class="flex gap-2 mt-4">
@@ -528,7 +530,7 @@ function fecharFormularioComissao() {
 
 // NOVA FUNÇÃO: Gerenciar membros da comissão
 // ...existing code...
-async function gerenciarMembrosComissao(comissaoId, comissaoNome) {
+async function gerenciarMembrosComissao(comissaoId) {
   // Busca membros atuais
   const resp = await fetch(`/api/comissoes/${comissaoId}/membros`);
   const membros = await resp.json();
@@ -541,7 +543,7 @@ async function gerenciarMembrosComissao(comissaoId, comissaoNome) {
     <div class="max-w-3xl mx-auto bg-white rounded-xl shadow p-8">
       <h2 class="text-2xl font-bold mb-6 text-blue-800 flex items-center gap-2">
         <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.5"></circle><path stroke-width="1.5" d="M12 6v6l4 2"></path></svg>
-        Membros da Comissão: ${comissaoNome}
+        Membros da Comissão
       </h2>
       <button onclick="carregarComissoes()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-lg mb-6 font-semibold transition">Voltar</button>
       <div class="mb-8">
@@ -550,13 +552,13 @@ async function gerenciarMembrosComissao(comissaoId, comissaoNome) {
           ${membros.length === 0 ? '<li class="text-gray-500">Nenhum membro cadastrado.</li>' : membros.map(m => `
             <li class="bg-gray-50 rounded-lg px-4 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 shadow">
               <span>
-                <span class="font-semibold text-blue-900">${m.nome}</span>
-                ${m.funcao ? `<span class="text-gray-600">- ${m.funcao}</span>` : ''}
-                ${m.email ? `<span class="text-gray-400 text-xs ml-2">(${m.email})</span>` : ''}
+                <span class="font-semibold text-blue-900">${escapeHtml(m.nome)}</span>
+                ${m.funcao ? `<span class="text-gray-600">- ${escapeHtml(m.funcao)}</span>` : ''}
+                ${m.email ? `<span class="text-gray-400 text-xs ml-2">(${escapeHtml(m.email)})</span>` : ''}
               </span>
               <span class="flex gap-2">
-                <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded transition" onclick="mostrarEditarMembro(${m.id}, ${comissaoId}, '${comissaoNome}')">Editar</button>
-                <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition" onclick="removerMembroComissao(${m.id}, ${comissaoId}, '${comissaoNome}')">Remover</button>
+                <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded transition" onclick="mostrarEditarMembro(${escapeHtml(m.id)}, ${escapeHtml(comissaoId)})">Editar</button>
+                <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition" onclick="removerMembroComissao(${escapeHtml(m.id)}, ${escapeHtml(comissaoId)})">Remover</button>
               </span>
             </li>
           `).join('')}
@@ -569,7 +571,7 @@ async function gerenciarMembrosComissao(comissaoId, comissaoNome) {
             <label class="block mb-1 font-semibold text-gray-700">Selecionar usuário fixo</label>
             <select name="usuario_id" class="border rounded-lg w-full p-2" onchange="toggleCamposNovoMembro(this)">
               <option value="">-- Não selecionar --</option>
-              ${usuarios.map(u => `<option value="${u.id}">${u.name}</option>`).join('')}
+              ${usuarios.map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.name)}</option>`).join('')}
             </select>
           </div>
           <div>
@@ -612,7 +614,7 @@ async function gerenciarMembrosComissao(comissaoId, comissaoNome) {
         senha: form.senha.value // novo campo
       })
     });
-    gerenciarMembrosComissao(comissaoId, comissaoNome); // Atualiza a lista
+    gerenciarMembrosComissao(comissaoId); // Atualiza a lista
   };
 }
 function toggleCamposNovoMembro(select) {
@@ -644,7 +646,7 @@ async function mostrarEditarComissao(id) {
       <form id="form-editar-comissao" class="space-y-4">
         <div>
           <label class="block mb-1 font-semibold text-gray-700">Nome da Comissão</label>
-          <input type="text" name="nome" class="border rounded-lg w-full p-2 focus:ring-2 focus:ring-blue-400 focus:outline-none" required value="${comissao.nome}">
+          <input type="text" name="nome" class="border rounded-lg w-full p-2 focus:ring-2 focus:ring-blue-400 focus:outline-none" required value="${escapeHtml(comissao.nome)}">
         </div>
         <div>
           <label class="block mb-1 font-semibold text-gray-700">Tipo</label>
@@ -657,7 +659,7 @@ async function mostrarEditarComissao(id) {
           <label class="block mb-1 font-semibold text-gray-700">Coordenador Responsável</label>
           <select name="coordenador_id" class="border rounded-lg w-full p-2" required>
             <option value="">Selecione um usuário</option>
-            ${usuarios.map(u => `<option value="${u.id}" ${u.id == comissao.coordenador_id ? 'selected' : ''}>${u.name}</option>`).join('')}
+            ${usuarios.map(u => `<option value="${escapeHtml(u.id)}" ${u.id == comissao.coordenador_id ? 'selected' : ''}>${escapeHtml(u.name)}</option>`).join('')}
           </select>
         </div>
         <div class="flex gap-2 mt-4">
@@ -691,7 +693,7 @@ async function removerComissao(id) {
   carregarComissoes();
 }
 
-function mostrarEditarMembro(membroId, comissaoId, comissaoNome) {
+function mostrarEditarMembro(membroId, comissaoId) {
   fetch(`/api/comissoes/${comissaoId}/membros`)
     .then(resp => resp.json())
     .then(membros => {
@@ -703,13 +705,13 @@ function mostrarEditarMembro(membroId, comissaoId, comissaoNome) {
         <h4 class="font-bold mb-2">Editar Membro</h4>
         <form id="form-editar-membro" class="bg-white rounded shadow p-4 mb-4">
           <label class="block mb-2">Nome:
-            <input type="text" name="nome" class="border rounded w-full p-2" required value="${membro.nome}">
+            <input type="text" name="nome" class="border rounded w-full p-2" required value="${escapeHtml(membro.nome)}">
           </label>
           <label class="block mb-2">E-mail:
-            <input type="email" name="email" class="border rounded w-full p-2" value="${membro.email || ''}">
+            <input type="email" name="email" class="border rounded w-full p-2" value="${escapeHtml(membro.email || '')}">
           </label>
           <label class="block mb-2">Função:
-            <input type="text" name="funcao" class="border rounded w-full p-2" value="${membro.funcao || ''}">
+            <input type="text" name="funcao" class="border rounded w-full p-2" value="${escapeHtml(membro.funcao || '')}">
           </label>
           <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Salvar</button>
           <button type="button" onclick="document.getElementById('formulario-editar-membro').remove()" class="bg-gray-400 text-white px-4 py-2 rounded ml-2">Cancelar</button>
@@ -729,15 +731,15 @@ function mostrarEditarMembro(membroId, comissaoId, comissaoNome) {
             funcao: form.funcao.value
           })
         });
-        gerenciarMembrosComissao(comissaoId, comissaoNome);
+        gerenciarMembrosComissao(comissaoId);
       };
     });
 }
 
-async function removerMembroComissao(membroId, comissaoId, comissaoNome) {
+async function removerMembroComissao(membroId, comissaoId) {
   if (!confirm('Tem certeza que deseja remover este membro da comissão?')) return;
   await fetch(`/api/membros_comissao/${membroId}`, { method: 'DELETE' });
-  gerenciarMembrosComissao(comissaoId, comissaoNome);
+  gerenciarMembrosComissao(comissaoId);
 }
 
 // funçao tarefas
@@ -771,20 +773,20 @@ async function carregarTarefas() {
     lista.innerHTML = tarefas.map(t => `
       <div class="bg-gray-50 rounded-xl shadow p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div class="text-lg font-semibold text-blue-900">${t.titulo}</div>
-          <div class="text-gray-600 text-sm mb-1">${t.descricao || '-'}</div>
-          <div class="text-xs text-gray-400 mb-1">Data Limite: ${t.data_limite ? new Date(t.data_limite).toLocaleDateString() : '-'}</div>
+          <div class="text-lg font-semibold text-blue-900">${escapeHtml(t.titulo)}</div>
+          <div class="text-gray-600 text-sm mb-1">${escapeHtml(t.descricao || '-')}</div>
+          <div class="text-xs text-gray-400 mb-1">Data Limite: ${escapeHtml(t.data_limite ? new Date(t.data_limite).toLocaleDateString() : '-')}</div>
           <div class="text-xs text-gray-400 mb-1">Destinatário: 
-            <span class="font-medium text-blue-700">${t.tipo_destinatario === 'usuario' ? 'Usuário #' + t.destinatario_id : 'Comissão #' + t.destinatario_id}</span>
+            <span class="font-medium text-blue-700">${escapeHtml(t.tipo_destinatario === 'usuario' ? 'Usuário #' + t.destinatario_id : 'Comissão #' + t.destinatario_id)}</span>
           </div>
           <div class="mt-1">
             <span class="font-bold text-sm text-gray-700">Status:</span>
-            <span class="${t.status === 'Concluída' ? 'text-green-600 font-semibold' : 'text-yellow-700 font-semibold'}">${t.status}</span>
+            <span class="${t.status === 'Concluída' ? 'text-green-600 font-semibold' : 'text-yellow-700 font-semibold'}">${escapeHtml(t.status)}</span>
           </div>
         </div>
         <div class="flex gap-2">
-          <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded transition" onclick="mostrarEditarTarefa(${t.id})">Editar</button>
-          <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition" onclick="removerTarefa(${t.id})">Excluir</button>
+          <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded transition" onclick="mostrarEditarTarefa(${escapeHtml(t.id)})">Editar</button>
+          <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition" onclick="removerTarefa(${escapeHtml(t.id)})">Excluir</button>
         </div>
       </div>
     `).join('');
@@ -844,7 +846,7 @@ async function mostrarFormularioTarefa() {
         <label class="block mb-1 font-semibold text-gray-700">Selecione o usuário</label>
         <select name="destinatario_id" class="border rounded-lg w-full p-2" required>
           <option value="">Selecione</option>
-          ${usuarios.map(u => `<option value="${u.id}">${u.name}</option>`).join('')}
+          ${usuarios.map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.name)}</option>`).join('')}
         </select>
       `;
     } else if (select.value === 'comissao') {
@@ -852,7 +854,7 @@ async function mostrarFormularioTarefa() {
         <label class="block mb-1 font-semibold text-gray-700">Selecione a comissão</label>
         <select name="destinatario_id" class="border rounded-lg w-full p-2" required>
           <option value="">Selecione</option>
-          ${comissoes.map(c => `<option value="${c.id}">${c.nome}</option>`).join('')}
+          ${comissoes.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.nome)}</option>`).join('')}
         </select>
       `;
     } else {
@@ -912,20 +914,20 @@ async function carregarTarefas() {
     lista.innerHTML = tarefas.map(t => `
       <div class="bg-gray-50 rounded-xl shadow p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div class="text-lg font-semibold text-blue-900">${t.titulo}</div>
-          <div class="text-gray-600 text-sm mb-1">${t.descricao || '-'}</div>
-          <div class="text-xs text-gray-400 mb-1">Data Limite: ${t.data_limite ? new Date(t.data_limite).toLocaleDateString() : '-'}</div>
+          <div class="text-lg font-semibold text-blue-900">${escapeHtml(t.titulo)}</div>
+          <div class="text-gray-600 text-sm mb-1">${escapeHtml(t.descricao || '-')}</div>
+          <div class="text-xs text-gray-400 mb-1">Data Limite: ${escapeHtml(t.data_limite ? new Date(t.data_limite).toLocaleDateString() : '-')}</div>
           <div class="text-xs text-gray-400 mb-1">Destinatário: 
-            <span class="font-medium text-blue-700">${t.tipo_destinatario === 'usuario' ? 'Usuário #' + t.destinatario_id : 'Comissão #' + t.destinatario_id}</span>
+            <span class="font-medium text-blue-700">${escapeHtml(t.tipo_destinatario === 'usuario' ? 'Usuário #' + t.destinatario_id : 'Comissão #' + t.destinatario_id)}</span>
           </div>
           <div class="mt-1">
             <span class="font-bold text-sm text-gray-700">Status:</span>
-            <span class="${t.status === 'Concluída' ? 'text-green-600 font-semibold' : 'text-yellow-700 font-semibold'}">${t.status}</span>
+            <span class="${t.status === 'Concluída' ? 'text-green-600 font-semibold' : 'text-yellow-700 font-semibold'}">${escapeHtml(t.status)}</span>
           </div>
         </div>
         <div class="flex gap-2">
-          <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded transition" onclick="mostrarEditarTarefa(${t.id})">Editar</button>
-          <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition" onclick="removerTarefa(${t.id})">Excluir</button>
+          <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded transition" onclick="mostrarEditarTarefa(${escapeHtml(t.id)})">Editar</button>
+          <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition" onclick="removerTarefa(${escapeHtml(t.id)})">Excluir</button>
         </div>
       </div>
     `).join('');
@@ -973,7 +975,7 @@ async function mostrarFormularioTarefa() {
         <label class="block mb-2">Selecione o usuário:
           <select name="destinatario_id" class="border rounded w-full p-2" required>
             <option value="">Selecione</option>
-            ${usuarios.map(u => `<option value="${u.id}">${u.name}</option>`).join('')}
+            ${usuarios.map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.name)}</option>`).join('')}
           </select>
         </label>
       `;
@@ -982,7 +984,7 @@ async function mostrarFormularioTarefa() {
         <label class="block mb-2">Selecione a comissão:
           <select name="destinatario_id" class="border rounded w-full p-2" required>
             <option value="">Selecione</option>
-            ${comissoes.map(c => `<option value="${c.id}">${c.nome}</option>`).join('')}
+            ${comissoes.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.nome)}</option>`).join('')}
           </select>
         </label>
       `;
@@ -1029,13 +1031,13 @@ async function mostrarEditarTarefa(id) {
     <h3 class="text-lg font-bold mb-2">Editar Tarefa</h3>
     <form id="form-editar-tarefa" class="bg-white rounded shadow p-4 mb-4">
       <label class="block mb-2">Título:
-        <input type="text" name="titulo" class="border rounded w-full p-2" required value="${tarefa.titulo}">
+        <input type="text" name="titulo" class="border rounded w-full p-2" required value="${escapeHtml(tarefa.titulo)}">
       </label>
       <label class="block mb-2">Descrição:
-        <textarea name="descricao" class="border rounded w-full p-2">${tarefa.descricao || ''}</textarea>
+        <textarea name="descricao" class="border rounded w-full p-2">${escapeHtml(tarefa.descricao || '')}</textarea>
       </label>
       <label class="block mb-2">Data Limite:
-        <input type="date" name="data_limite" class="border rounded w-full p-2" value="${tarefa.data_limite ? tarefa.data_limite.split('T')[0] : ''}">
+        <input type="date" name="data_limite" class="border rounded w-full p-2" value="${escapeHtml(tarefa.data_limite ? tarefa.data_limite.split('T')[0] : '')}">
       </label>
       <label class="block mb-2">Destinatário:
         <select name="tipo_destinatario" class="border rounded w-full p-2" onchange="toggleDestinatarioTarefaEditar(this)">
@@ -1064,7 +1066,7 @@ async function mostrarEditarTarefa(id) {
         <label class="block mb-2">Selecione o usuário:
           <select name="destinatario_id" class="border rounded w-full p-2" required>
             <option value="">Selecione</option>
-            ${usuarios.map(u => `<option value="${u.id}" ${tarefa.tipo_destinatario === 'usuario' && tarefa.destinatario_id == u.id ? 'selected' : ''}>${u.name}</option>`).join('')}
+            ${usuarios.map(u => `<option value="${escapeHtml(u.id)}" ${tarefa.tipo_destinatario === 'usuario' && tarefa.destinatario_id == u.id ? 'selected' : ''}>${escapeHtml(u.name)}</option>`).join('')}
           </select>
         </label>
       `;
@@ -1073,7 +1075,7 @@ async function mostrarEditarTarefa(id) {
         <label class="block mb-2">Selecione a comissão:
           <select name="destinatario_id" class="border rounded w-full p-2" required>
             <option value="">Selecione</option>
-            ${comissoes.map(c => `<option value="${c.id}" ${tarefa.tipo_destinatario === 'comissao' && tarefa.destinatario_id == c.id ? 'selected' : ''}>${c.nome}</option>`).join('')}
+            ${comissoes.map(c => `<option value="${escapeHtml(c.id)}" ${tarefa.tipo_destinatario === 'comissao' && tarefa.destinatario_id == c.id ? 'selected' : ''}>${escapeHtml(c.nome)}</option>`).join('')}
           </select>
         </label>
       `;
@@ -1131,6 +1133,13 @@ async function carregarArquivos() {
           </select>
         </div>
         <div>
+          <label class="block mb-1 font-semibold text-gray-700">Acesso</label>
+          <select name="visibilidade" class="border rounded-lg w-full p-2" required>
+            <option value="geral">Todos os usuários</option>
+            <option value="gestao">Somente equipe de gestão</option>
+          </select>
+        </div>
+        <div>
           <label class="block mb-1 font-semibold text-gray-700">Selecione um arquivo</label>
           <input type="file" name="arquivo" class="border rounded-lg w-full p-2 bg-white" required>
         </div>
@@ -1168,6 +1177,7 @@ async function carregarArquivos() {
             <th class="px-4 py-2 text-left">Nome</th>
             <th class="px-4 py-2 text-left">Tipo</th>
             <th class="px-4 py-2 text-left">Categoria</th>
+            <th class="px-4 py-2 text-left">Acesso</th>
             <th class="px-4 py-2 text-left">Data</th>
             <th class="px-4 py-2 text-center">Ações</th>
           </tr>
@@ -1175,13 +1185,14 @@ async function carregarArquivos() {
         <tbody>
           ${arquivos.map(a => `
             <tr class="border-t">
-              <td class="px-4 py-2">${a.nome_original}</td>
-              <td class="px-4 py-2">${a.tipo}</td>
-              <td class="px-4 py-2">${a.categoria || '-'}</td>
-              <td class="px-4 py-2">${new Date(a.data_upload).toLocaleString()}</td>
+              <td class="px-4 py-2">${escapeHtml(a.nome_original)}</td>
+              <td class="px-4 py-2">${escapeHtml(a.tipo)}</td>
+              <td class="px-4 py-2">${escapeHtml(a.categoria || '-')}</td>
+              <td class="px-4 py-2">${a.visibilidade === 'gestao' ? 'Equipe de gestão' : 'Todos os usuários'}</td>
+              <td class="px-4 py-2">${escapeHtml(new Date(a.data_upload).toLocaleString())}</td>
               <td class="px-4 py-2 text-center">
-                <a href="/uploads/${a.nome_armazenado}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition">Baixar</a>
-                <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-xs font-semibold ml-2 transition" onclick="removerArquivo(${a.id})">Excluir</button>
+                <a href="${escapeHtml(a.url)}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition">Baixar</a>
+                <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-xs font-semibold ml-2 transition" onclick="removerArquivo(${escapeHtml(a.id)})">Excluir</button>
               </td>
             </tr>
           `).join('')}
@@ -1297,16 +1308,16 @@ async function carregarCalendario() {
       <h3 class="text-lg font-bold mb-2">Editar Evento</h3>
       <form id="form-editar-evento" class="bg-white rounded shadow p-4 mb-4">
         <label class="block mb-2">Título:
-          <input type="text" name="titulo" class="border rounded w-full p-2" required value="${evento.titulo}">
+          <input type="text" name="titulo" class="border rounded w-full p-2" required value="${escapeHtml(evento.titulo)}">
         </label>
         <label class="block mb-2">Descrição:
-          <textarea name="descricao" class="border rounded w-full p-2">${evento.descricao || ''}</textarea>
+          <textarea name="descricao" class="border rounded w-full p-2">${escapeHtml(evento.descricao || '')}</textarea>
         </label>
         <label class="block mb-2">Data e hora de início:
-          <input type="datetime-local" name="inicio" class="border rounded w-full p-2" value="${evento.inicio.replace(' ', 'T')}" required>
+          <input type="datetime-local" name="inicio" class="border rounded w-full p-2" value="${escapeHtml(evento.inicio.replace(' ', 'T'))}" required>
         </label>
         <label class="block mb-2">Data e hora de fim:
-          <input type="datetime-local" name="fim" class="border rounded w-full p-2" value="${evento.fim ? evento.fim.replace(' ', 'T') : ''}">
+          <input type="datetime-local" name="fim" class="border rounded w-full p-2" value="${escapeHtml(evento.fim ? evento.fim.replace(' ', 'T') : '')}">
         </label>
         <label class="block mb-2">Tipo:
           <select name="tipo" class="border rounded w-full p-2">
@@ -1316,7 +1327,7 @@ async function carregarCalendario() {
           </select>
         </label>
         <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Salvar</button>
-        <button type="button" onclick="removerEvento(${evento.id})" class="bg-red-600 text-white px-4 py-2 rounded ml-2">Excluir</button>
+        <button type="button" onclick="removerEvento(${escapeHtml(evento.id)})" class="bg-red-600 text-white px-4 py-2 rounded ml-2">Excluir</button>
         <button type="button" onclick="document.getElementById('form-evento').innerHTML = ''" class="bg-gray-400 text-white px-4 py-2 rounded ml-2">Cancelar</button>
       </form>
     `;
@@ -1381,10 +1392,10 @@ async function carregarRanking() {
           ${ranking.map((u, i) => `
             <tr class="${i === 0 ? 'bg-yellow-50 font-bold' : ''}">
               <td class="border-t px-4 py-2">${i + 1} ${i === 0 ? '🏆' : i === 1 ? '🥈' : i === 2 ? '🥉' : ''}</td>
-              <td class="border-t px-4 py-2">${u.name}</td>
-              <td class="border-t px-4 py-2">${u.presencas}</td>
-              <td class="border-t px-4 py-2">${u.tarefas_concluidas}</td>
-              <td class="border-t px-4 py-2 text-blue-800">${u.pontos}</td>
+              <td class="border-t px-4 py-2">${escapeHtml(u.name)}</td>
+              <td class="border-t px-4 py-2">${escapeHtml(u.presencas)}</td>
+              <td class="border-t px-4 py-2">${escapeHtml(u.tarefas_concluidas)}</td>
+              <td class="border-t px-4 py-2 text-blue-800">${escapeHtml(u.pontos)}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -1393,28 +1404,25 @@ async function carregarRanking() {
   `;
 }
 // ...existing code...
-window.carregarRanking = carregarRanking; t
+window.carregarRanking = carregarRanking;
 
 // ...existing code...
 
 // PERFIL DO PRESIDENTE (nome, foto, upload e logout)
 window.addEventListener('DOMContentLoaded', async () => {
-  const nome = localStorage.getItem('nome'); // Salve o nome no login!
-  const email = localStorage.getItem('userEmail');
-  if (document.getElementById('nome-presidente')) {
-    document.getElementById('nome-presidente').textContent = nome || 'Presidente';
-  }
-
-  // Busca foto do backend
   try {
-    const BASE_URL = window.location.origin;
-    const resp = await fetch(`${BASE_URL}/api/usuarios?email=${email}`);
-    const usuario = (await resp.json())[0];
+    const resp = await fetch('/api/me');
+    if (resp.status === 401) return window.location.replace('/login/index_login.html');
+    if (!resp.ok) throw new Error('Profile request failed.');
+    const usuario = await resp.json();
+    if (document.getElementById('nome-presidente')) {
+      document.getElementById('nome-presidente').textContent = usuario.name || 'Presidente';
+    }
     if (usuario && usuario.foto_url && document.getElementById('avatar-presidente')) {
       document.getElementById('avatar-presidente').src = usuario.foto_url;
     }
-  } catch (e) {
-    // Se der erro, mantém o avatar padrão
+  } catch {
+    console.error('Could not load president profile.');
   }
 });
 
@@ -1446,9 +1454,16 @@ if (document.getElementById('input-foto-perfil-presidente')) {
 
 // Logout
 if (document.getElementById('logout-btn-presidente')) {
-  document.getElementById('logout-btn-presidente').addEventListener('click', function () {
-    localStorage.clear();
-    window.location.href = '/index_login.html'; // Ajuste o caminho se necessário
+  document.getElementById('logout-btn-presidente').addEventListener('click', async function () {
+    try {
+      const response = await fetch('/api/logout', { method: 'POST' });
+      if (!response.ok) throw new Error('Logout request failed.');
+    } catch {
+      alert('Não foi possível confirmar o encerramento da sessão.');
+    } finally {
+      localStorage.clear();
+      window.location.href = '/login/index_login.html';
+    }
   });
 }
 

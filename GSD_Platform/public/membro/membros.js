@@ -1,3 +1,5 @@
+const escapeHtml = window.gsdEscapeHtml;
+
 // MENU LATERAL DINÂMICO
 function inicializarMenuMembro(setor) {
   if (!setor) setor = "Outro";
@@ -53,9 +55,9 @@ function inicializarMenuMembro(setor) {
   menu.forEach(item => {
     const li = document.createElement('li');
     li.innerHTML = `
-      <a href="${item.href}" class="flex items-center gap-3 py-2 px-4 rounded-lg hover:bg-blue-700 transition">
+      <a href="${escapeHtml(item.href)}" class="flex items-center gap-3 py-2 px-4 rounded-lg hover:bg-blue-700 transition">
         ${item.icone}
-        <span>${item.nome}</span>
+        <span>${escapeHtml(item.nome)}</span>
       </a>
     `;
     ul.appendChild(li);
@@ -70,18 +72,20 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // PERFIL DO MEMBRO (nome, foto, upload e logout)
 window.addEventListener('DOMContentLoaded', async () => {
-  const nome = localStorage.getItem('nome');
-  const email = localStorage.getItem('userEmail');
-  if (document.getElementById('nome-membro')) {
-    document.getElementById('nome-membro').textContent = nome || 'Membro';
-  }
   try {
-    const resp = await fetch(`${window.location.origin}/api/usuarios?email=${email}`);
-    const usuario = (await resp.json())[0];
+    const resp = await fetch('/api/me');
+    if (resp.status === 401) return window.location.replace('/login/index_login.html');
+    if (!resp.ok) throw new Error('Profile request failed.');
+    const usuario = await resp.json();
+    if (document.getElementById('nome-membro')) {
+      document.getElementById('nome-membro').textContent = usuario.name || 'Membro';
+    }
     if (usuario && usuario.foto_url && document.getElementById('avatar-membro')) {
       document.getElementById('avatar-membro').src = usuario.foto_url;
     }
-  } catch (e) {}
+  } catch {
+    console.error('Could not load member profile.');
+  }
 });
 
 if (document.getElementById('input-foto-perfil-membro')) {
@@ -107,9 +111,16 @@ if (document.getElementById('input-foto-perfil-membro')) {
 }
 
 if (document.getElementById('logout-btn-membro')) {
-  document.getElementById('logout-btn-membro').addEventListener('click', function () {
-    localStorage.clear();
-    window.location.href = '/login/index_login.html';
+  document.getElementById('logout-btn-membro').addEventListener('click', async function () {
+    try {
+      const response = await fetch('/api/logout', { method: 'POST' });
+      if (!response.ok) throw new Error('Logout request failed.');
+    } catch {
+      alert('Não foi possível confirmar o encerramento da sessão.');
+    } finally {
+      localStorage.clear();
+      window.location.href = '/login/index_login.html';
+    }
   });
 }
 
@@ -136,13 +147,13 @@ async function carregarArquivos() {
     </div>
   `;
   try {
-    const res = await fetch('http://localhost:3000/api/arquivos');
+    const res = await fetch('/api/arquivos');
     const arquivos = await res.json();
     const lista = arquivos.map(arq => `
       <div class="bg-gray-50 border rounded-lg p-4 shadow hover:shadow-lg transition">
-        <h3 class="font-semibold text-blue-800">${arq.nome_original}</h3>
-        <p class="text-gray-600 text-sm">Data de upload: ${new Date(arq.data_upload).toLocaleString()}</p>
-                <a href="${window.location.origin}/uploads/${arq.nome_armazenado}" class="text-blue-600 hover:underline font-semibold" download>
+        <h3 class="font-semibold text-blue-800">${escapeHtml(arq.nome_original)}</h3>
+        <p class="text-gray-600 text-sm">Data de upload: ${escapeHtml(new Date(arq.data_upload).toLocaleString())}</p>
+                <a href="${escapeHtml(arq.url)}" class="text-blue-600 hover:underline font-semibold" download>
           Baixar Arquivo
         </a>
       </div>
@@ -186,10 +197,10 @@ async function carregarTarefas() {
       .filter(tarefa => tarefa.destinatario_id == userId && tarefa.status !== 'Concluída')
       .map(tarefa => `
         <div class="bg-gray-50 border rounded-lg p-4 shadow hover:shadow-lg transition">
-          <h3 class="font-semibold text-blue-800">${tarefa.titulo}</h3>
-          <p class="text-gray-600 text-sm">${tarefa.descricao}</p>
-          <p class="text-gray-500 text-xs">Data limite: ${tarefa.data_limite}</p>
-          <button class="concluir-tarefa bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg mt-2 transition" data-id="${tarefa.id}">
+          <h3 class="font-semibold text-blue-800">${escapeHtml(tarefa.titulo)}</h3>
+          <p class="text-gray-600 text-sm">${escapeHtml(tarefa.descricao)}</p>
+          <p class="text-gray-500 text-xs">Data limite: ${escapeHtml(tarefa.data_limite)}</p>
+          <button class="concluir-tarefa bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg mt-2 transition" data-id="${escapeHtml(tarefa.id)}">
             Concluir
           </button>
         </div>
@@ -243,13 +254,11 @@ async function carregarComissoes() {
     const res = await fetch(`${window.location.origin}/api/comissoes`);
     const comissoes = await res.json();
     const userEmail = localStorage.getItem('userEmail');
-    const minhasComissoes = comissoes.filter(comissao =>
-      comissao.membros && comissao.membros.includes(userEmail)
-    );
+    const minhasComissoes = comissoes;
     const lista = minhasComissoes.map(comissao => `
       <div class="bg-gray-50 border rounded-lg p-4 shadow hover:shadow-lg transition">
-        <h3 class="font-semibold text-purple-800">${comissao.nome}</h3>
-        <p class="text-gray-600 text-sm">${comissao.descricao || ''}</p>
+        <h3 class="font-semibold text-purple-800">${escapeHtml(comissao.nome)}</h3>
+        <p class="text-gray-600 text-sm">${escapeHtml(comissao.descricao || '')}</p>
       </div>
     `).join('');
     document.getElementById('lista-comissoes').innerHTML = lista || "<p class='text-gray-500'>Você não participa de nenhuma comissão.</p>";
@@ -350,10 +359,10 @@ async function carregarRelatoriosAtualizados() {
     const relatoriosFiltrados = relatorios.filter(relatorio => relatorio.usuario_email === userEmail);
     const lista = relatoriosFiltrados.map(relatorio => `
       <div class="bg-gray-50 border rounded-lg p-4 shadow hover:shadow-lg transition">
-        <h3 class="font-semibold text-blue-800">${relatorio.tipo}</h3>
-        <p class="text-gray-600 text-sm">${relatorio.projeto}</p>
-        <p class="text-gray-500 text-xs">Status: ${relatorio.status}</p>
-        <p class="text-gray-500 text-xs">Observação: ${relatorio.observacao || 'Nenhuma'}</p>
+        <h3 class="font-semibold text-blue-800">${escapeHtml(relatorio.tipo)}</h3>
+        <p class="text-gray-600 text-sm">${escapeHtml(relatorio.projeto)}</p>
+        <p class="text-gray-500 text-xs">Status: ${escapeHtml(relatorio.status)}</p>
+        <p class="text-gray-500 text-xs">Observação: ${escapeHtml(relatorio.observacao || 'Nenhuma')}</p>
       </div>
     `).join('');
     document.getElementById('relatorios').innerHTML = lista || "<p class='text-gray-500'>Nenhum relatório disponível.</p>";
@@ -405,10 +414,10 @@ async function carregarRanking() {
         ${ranking.map((u, i) => `
           <tr class="${i === 0 ? 'bg-yellow-50 font-bold' : ''}">
             <td class="border-t px-4 py-2">${i + 1} ${i === 0 ? '🏆' : i === 1 ? '🥈' : i === 2 ? '🥉' : ''}</td>
-            <td class="border-t px-4 py-2">${u.name}</td>
-            <td class="border-t px-4 py-2">${u.presencas}</td>
-            <td class="border-t px-4 py-2">${u.tarefas_concluidas}</td>
-            <td class="border-t px-4 py-2 text-yellow-600">${u.pontos}</td>
+            <td class="border-t px-4 py-2">${escapeHtml(u.name)}</td>
+            <td class="border-t px-4 py-2">${escapeHtml(u.presencas)}</td>
+            <td class="border-t px-4 py-2">${escapeHtml(u.tarefas_concluidas)}</td>
+            <td class="border-t px-4 py-2 text-yellow-600">${escapeHtml(u.pontos)}</td>
           </tr>
         `).join('')}
       </tbody>
@@ -423,16 +432,16 @@ async function carregarInicioMembro() {
     fetch(`${window.location.origin}/api/tarefas`),
     fetch('/api/ranking'),
     fetch('/api/eventos'),
-    fetch('http://localhost:3000/api/comissoes')
+    fetch('/api/comissoes')
   ]);
   const tarefas = await tarefasResp.json();
   const ranking = await rankingResp.json();
   const eventos = await eventosResp.json();
   const comissoes = await comissoesResp.json();
   const userId = localStorage.getItem('userId');
-  const userEmail = localStorage.getItem('userEmail');
-  const usuarioRanking = ranking.find(u => u.email === userEmail) || {};
-  const minhasComissoes = comissoes.filter(c => c.membros && c.membros.includes(userEmail));
+  const rankingIndex = ranking.findIndex(user => String(user.id) === String(userId));
+  const usuarioRanking = rankingIndex < 0 ? {} : { ...ranking[rankingIndex], posicao: rankingIndex + 1 };
+  const minhasComissoes = comissoes;
   const minhasTarefasPendentes = tarefas.filter(t => t.status !== 'Concluída' && t.destinatario_id == userId);
   const agora = new Date();
   const eventosDoMes = eventos.filter(e => new Date(e.inicio).getMonth() === agora.getMonth());
@@ -447,17 +456,17 @@ async function carregarInicioMembro() {
       <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center">
         <span class="text-green-600 text-3xl font-bold">${eventosDoMes.length}</span>
         <span class="text-gray-700 mt-2 font-semibold">Eventos do Mês</span>
-        <span class="text-xs text-gray-500 mt-1">${proximoEvento ? `Próximo: ${proximoEvento.titulo} (${new Date(proximoEvento.inicio).toLocaleDateString()})` : 'Nenhum evento'}</span>
+        <span class="text-xs text-gray-500 mt-1">${proximoEvento ? `Próximo: ${escapeHtml(proximoEvento.titulo)} (${escapeHtml(new Date(proximoEvento.inicio).toLocaleDateString())})` : 'Nenhum evento'}</span>
       </div>
       <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center">
         <span class="text-purple-600 text-3xl font-bold">${minhasComissoes.length}</span>
         <span class="text-gray-700 mt-2 font-semibold">Comissões Ativas</span>
-        <span class="text-xs text-gray-500 mt-1">Membros envolvidos: ${minhasComissoes.reduce((acc, c) => acc + (c.membros?.length || 0), 0)}</span>
+        <span class="text-xs text-gray-500 mt-1">Membros envolvidos: ${minhasComissoes.reduce((acc, c) => acc + Number(c.membros_count || 0), 0)}</span>
       </div>
       <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center">
         <span class="text-yellow-500 text-3xl font-bold">${usuarioRanking.posicao || '-'}</span>
         <span class="text-gray-700 mt-2 font-semibold">Seu Ranking</span>
-        <span class="text-xs text-gray-500 mt-1">Pontos: ${usuarioRanking.pontos || 0}</span>
+        <span class="text-xs text-gray-500 mt-1">Pontos: ${escapeHtml(usuarioRanking.pontos || 0)}</span>
       </div>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -467,10 +476,10 @@ async function carregarInicioMembro() {
           ${minhasTarefasPendentes.slice(0, 5).map(t => `
             <div class="bg-gray-50 rounded-lg p-4 shadow flex items-center justify-between">
               <div>
-                <div class="font-semibold text-gray-800">${t.titulo}</div>
-                <div class="text-xs text-gray-500">Vence em ${t.data_limite ? Math.ceil((new Date(t.data_limite) - agora) / (1000*60*60*24)) : '-'} dias</div>
+                <div class="font-semibold text-gray-800">${escapeHtml(t.titulo)}</div>
+                <div class="text-xs text-gray-500">Vence em ${escapeHtml(t.data_limite ? Math.ceil((new Date(t.data_limite) - agora) / (1000*60*60*24)) : '-')} dias</div>
               </div>
-              <span class="text-xs px-2 py-1 rounded ${t.prioridade === 'Alta' ? 'bg-blue-100 text-blue-700' : t.prioridade === 'Média' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-700'}">${t.prioridade || 'Pendente'}</span>
+              <span class="text-xs px-2 py-1 rounded ${t.prioridade === 'Alta' ? 'bg-blue-100 text-blue-700' : t.prioridade === 'Média' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-700'}">${escapeHtml(t.prioridade || 'Pendente')}</span>
             </div>
           `).join('') || `<div class="text-gray-500">Nenhuma tarefa recente.</div>`}
         </div>
@@ -723,7 +732,7 @@ async function renderTabRadio(tab) {
   document.getElementById('form-evento-radio').onsubmit = async function (e) {
     e.preventDefault();
     const form = e.target;
-    await fetch('http://localhost:3000/api/eventos_radio', {
+    await fetch('/api/eventos_radio', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -743,15 +752,15 @@ async function renderTabRadio(tab) {
 async function carregarListaAudios() {
   const lista = document.getElementById('lista-audios');
   try {
-    const res = await fetch('http://localhost:3000/api/audios');
+    const res = await fetch('/api/audios');
     const audios = await res.json();
     lista.innerHTML = audios.map(audio => `
       <div class="bg-gray-50 border rounded-lg p-4 shadow hover:shadow-lg transition flex flex-col gap-2">
-        <div class="font-semibold text-blue-700">${audio.tipo || 'Áudio'}</div>
-        <div class="text-gray-700 text-sm">${audio.descricao || ''}</div>
-        <audio controls src="${window.location.origin}/uploads/audios/${audio.nome_armazenado}" class="w-full"></audio>
-        <a href="${window.location.origin}/uploads/audios/${audio.nome_armazenado}" download class="text-blue-600 hover:underline text-sm">Baixar</a>
-        <div class="text-xs text-gray-400">Enviado em: ${new Date(audio.data_upload).toLocaleString()}</div>
+        <div class="font-semibold text-blue-700">${escapeHtml(audio.tipo || 'Áudio')}</div>
+        <div class="text-gray-700 text-sm">${escapeHtml(audio.descricao || '')}</div>
+        <audio controls src="${escapeHtml(audio.url)}" class="w-full"></audio>
+        <a href="${escapeHtml(audio.url)}" download class="text-blue-600 hover:underline text-sm">Baixar</a>
+        <div class="text-xs text-gray-400">Enviado em: ${escapeHtml(new Date(audio.data_upload).toLocaleString())}</div>
       </div>
     `).join('') || "<div class='text-gray-500'>Nenhum áudio enviado ainda.</div>";
   } catch {
@@ -763,10 +772,10 @@ async function carregarListaAudios() {
 async function carregarComunicados() {
   const lista = document.getElementById('lista-comunicados');
   try {
-    const res = await fetch('http://localhost:3000/api/comunicados');
+    const res = await fetch('/api/comunicados');
     const comunicados = await res.json();
     lista.innerHTML = comunicados.reverse().map(c => `
-      <li class="bg-blue-50 border-l-4 border-blue-400 p-3 rounded">${c.mensagem} <span class="text-xs text-gray-400 float-right">${new Date(c.data_envio).toLocaleString()}</span></li>
+      <li class="bg-blue-50 border-l-4 border-blue-400 p-3 rounded">${escapeHtml(c.mensagem)} <span class="text-xs text-gray-400 float-right">${escapeHtml(new Date(c.data_envio).toLocaleString())}</span></li>
     `).join('') || "<li class='text-gray-500'>Nenhum comunicado ainda.</li>";
   } catch {
     lista.innerHTML = "<li class='text-red-600'>Erro ao carregar comunicados.</li>";
@@ -777,7 +786,7 @@ async function carregarComunicados() {
 async function renderFullCalendarRadio() {
   const calendarEl = document.getElementById('calendario-radio');
   calendarEl.innerHTML = ""; // Limpa antes de renderizar
-  const res = await fetch('http://localhost:3000/api/eventos_radio');
+  const res = await fetch('/api/eventos_radio');
   const eventos = await res.json();
   const calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: 'dayGridMonth',

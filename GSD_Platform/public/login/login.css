@@ -9,6 +9,10 @@ body, html {
   overflow: hidden;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 /* Layout principal */
 .login-main {
   display: flex;
@@ -106,21 +110,24 @@ body, html {
   width: 100%;
 }
 
-#login-form {
+#login-form,
+#password-reset-form {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-#login-form label {
+#login-form label,
+#password-reset-form label {
   font-weight: 600;
   color: #0047ab;
   margin-bottom: 4px;
   text-align: left;
 }
 
-#login-form input {
+#login-form input,
+#password-reset-form input {
   padding: 12px 0;
   border: none;
   border-bottom: 2px solid #e0e0e0;
@@ -129,7 +136,8 @@ body, html {
   background: transparent;
   transition: border-color 0.2s;
 }
-#login-form input:focus {
+#login-form input:focus,
+#password-reset-form input:focus {
   border-bottom: 2px solid #3a8dde;
 }
 

@@ -1,176 +1,130 @@
-# Plataforma GSD - Gestão do Grêmio Estudantil
+# Plataforma GSD
 
-Sistema completo de gestão para grêmios estudantis, desenvolvido em Node.js com Express e SQLite.
+Sistema de gestão de grêmio estudantil, preservando as áreas e a interface já existentes. A aplicação utiliza Node.js 22, Express, HTML/CSS/JavaScript, PostgreSQL no ambiente hospedado e SQLite para desenvolvimento local.
 
 ## Funcionalidades
 
-### Para Presidente
-- Dashboard com visão geral
-- Calendário de eventos
-- Registro e gerenciamento de reuniões
-- Gestão de comissões
-- Atribuição de tarefas
-- Upload e compartilhamento de arquivos
-- Análise de relatórios
-- Ranking de engajamento
+- Painéis de presidente e vice-presidente, coordenadores e membros.
+- Usuários, sessões, redefinição de senha e permissões por função.
+- Reuniões, presenças, eventos, comissões, tarefas e relatórios.
+- Arquivos compartilhados e fotos de perfil.
+- Cantina: produtos, vendas, cálculo de troco e baixa transacional de estoque.
+- Rádio GSD Mix: áudios, comunicados e calendário.
+- Ranking de participação.
 
-### Para Coordenadores
-- Dashboard personalizado por setor
-- Visualização de arquivos
-- Gerenciamento de tarefas
-- Participação em comissões
-- Envio de relatórios
-- Sistema de cantina (setor Finanças)
-- Ranking de participação
+## Tecnologias
 
-### Para Membros
-- Dashboard com informações relevantes
-- Acesso a arquivos compartilhados
-- Visualização de tarefas
-- Participação em comissões
-- Envio de relatórios
-- Rádio GSD Mix (membros específicos)
-- Ranking geral
+- Node.js 22 LTS e Express 5.
+- PostgreSQL (`pg`) no servidor; SQLite para execução local.
+- Supabase Storage para arquivos persistentes em produção.
+- Argon2id e sessões armazenadas no banco.
+- Multer para uploads, Helmet, CORS, rate limiting e validação no servidor.
+- HTML, CSS e JavaScript sem framework de frontend.
 
-## Tecnologias Utilizadas
+## Requisitos
 
-- **Backend**: Node.js, Express.js
-- **Banco de Dados**: SQLite3
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
-- **Estilização**: Tailwind CSS
-- **Upload de Arquivos**: Multer
-- **Calendário**: FullCalendar
+- Node.js 22.x e npm.
+- Para execução local, não é necessário configurar serviços externos.
+- Para produção, uma instância PostgreSQL, Supabase Storage e as variáveis de ambiente indicadas abaixo.
 
-## Instalação e Configuração
+## Execução local
 
-### Pré-requisitos
-- Node.js 18+ 
-- npm ou yarn
+No PowerShell, entre na pasta `GSD_Platform`:
 
-### Instalação
-1. Clone o repositório ou extraia os arquivos
-2. Instale as dependências:
-   ```bash
-   npm install
-   ```
+```powershell
+npm ci
+Copy-Item .env.example .env
+npm start
+```
 
-3. Configure as variáveis de ambiente:
-   ```bash
-   cp .env.example .env
-   ```
+Abra `http://localhost:3000`. O primeiro início cria `database.local.db`; o banco legado `database.db` não é alterado. O SQLite local e os arquivos locais são ignorados pelo Git.
 
-4. Inicie o servidor:
-   ```bash
-   npm start
-   ```
+Para desenvolvimento com reinicialização automática:
 
-### Desenvolvimento
-Para desenvolvimento com auto-reload:
-```bash
+```powershell
 npm run dev
 ```
 
-## Estrutura do Projeto
+Para rodar a suíte automatizada:
 
-```
-GSD_Platform/
-├── server.js              # Servidor principal
-├── package.json           # Dependências e scripts
-├── database.db            # Banco de dados SQLite (criado automaticamente)
-├── uploads/               # Arquivos enviados
-│   └── audios/           # Áudios da rádio
-├── public/               # Arquivos estáticos
-│   ├── login/           # Tela de login
-│   ├── presidente/      # Interface do presidente
-│   ├── coordenador/     # Interface dos coordenadores
-│   └── membro/          # Interface dos membros
-└── README.md            # Este arquivo
+```powershell
+npm test
 ```
 
-## Usuários Padrão
+O comando `npm run create-admin` cria o primeiro usuário administrador somente se o banco estiver sem usuários. Ele solicita uma senha sem exibi-la no terminal. Não há contas nem senhas padrão.
 
-O sistema vem com usuários pré-cadastrados para teste:
+## Autenticação e migração de contas antigas
 
-### Presidente
-- **Email**: gabrielcallegari@gsd.com
-- **Senha**: senha123
+Senhas novas são armazenadas com Argon2id. As contas importadas do SQLite ficam bloqueadas até uma redefinição segura; as senhas legadas não são aceitas como credenciais de produção.
 
-### Vice-Presidente
-- **Email**: maxine@gsd.com
-- **Senha**: senha123
+Para redefinir a senha de uma conta usando o banco configurado no `.env`:
 
-### Coordenadores
-- **Finanças**: mariaeduarda@gsd.com, arthur@gsd.com
-- **Eventos**: mavi@gsd.com, estephani@gsd.com
-- **Esportes**: isaque@gsd.com, muralha@gsd.com
-- **Relações Sociais**: suyane@gsd.com, heloisa@gsd.com
-- **Senha**: senha123 (para todos)
-
-### Membros
-- **Rádio GSD Mix**: vitoria@gsd.com, yan@gsd.com, wesley@gsd.com
-- **Direitos Humanos**: davi@gsd.com, lorrany@gsd.com, isabela@gsd.com
-- **Senha**: senha123 (para todos)
-
-## Funcionalidades Especiais
-
-### Sistema de Cantina
-Disponível para coordenadores do setor Finanças:
-- Cadastro de produtos
-- Controle de estoque
-- Sistema de vendas (PDV)
-- Cálculo automático de troco
-
-### Rádio GSD Mix
-Área exclusiva para membros da rádio:
-- Upload de áudios e vinhetas
-- Escala de programação
-- Comunicados internos
-- Calendário específico da rádio
-
-### Sistema de Ranking
-- Pontuação baseada em presenças e tarefas concluídas
-- Ranking geral visível para todos os usuários
-- Incentivo ao engajamento
-
-## Configuração para Produção
-
-### Variáveis de Ambiente
-```bash
-PORT=3000
-DATABASE_PATH=./database.db
-NODE_ENV=production
+```powershell
+npm run reset-password -- usuario@exemplo.org
 ```
 
-### Hospedagem
-1. Configure o servidor para escutar na porta definida pela variável `PORT`
-2. Certifique-se de que o diretório `uploads/` tenha permissões de escrita
-3. Configure um proxy reverso (nginx) se necessário
-4. Configure SSL/HTTPS para segurança
+Use um terminal interativo. O comando revoga as sessões ativas da plataforma.
 
-### Backup do Banco de Dados
-O banco SQLite está no arquivo `database.db`. Faça backups regulares:
-```bash
-cp database.db database_backup_$(date +%Y%m%d).db
+Para criar uma cópia local de desenvolvimento com os dados do banco legado, mantenha `database.db` e as pastas `uploads` ao lado do arquivo e execute:
+
+```powershell
+npm run migrate:sqlite:local
+npm run migrate:uploads:local
 ```
 
-## Suporte e Manutenção
+Esses comandos criam `database.local.db` e `uploads-local` sem alterar o banco original. Contas importadas continuam exigindo redefinição de senha.
 
-### Logs
-O servidor registra atividades no console. Em produção, redirecione para arquivos:
-```bash
-npm start > logs/app.log 2>&1
-```
+## Variáveis de ambiente
 
-### Monitoramento
-- Monitore o uso de disco (uploads e banco de dados)
-- Verifique logs regularmente
-- Mantenha backups atualizados
+Copie `.env.example` para `.env` localmente. Em produção, configure os valores no painel do provedor, nunca em arquivos versionados:
 
-## Licença
+| Variável | Finalidade |
+| --- | --- |
+| `NODE_ENV` | Use `production` no servidor. |
+| `PORT` | Porta HTTP; fornecida pelo Render. |
+| `DATABASE_URL` | URL PostgreSQL com conexão TLS. Obrigatória em produção. |
+| `SESSION_SECRET` | Segredo aleatório de sessão com pelo menos 32 caracteres. |
+| `SUPABASE_URL` | URL do projeto Supabase. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Variável do backend para a chave Secret do Supabase (`sb_secret_...`; a chave legada `service_role` também funciona). Mantenha privada; nunca use no frontend. |
+| `SUPABASE_DOCUMENTS_BUCKET` | Bucket privado de documentos; padrão `gsd-documents`. |
+| `SUPABASE_AUDIOS_BUCKET` | Bucket privado de áudios; padrão `gsd-audios`. |
+| `SUPABASE_PROFILE_BUCKET` | Bucket privado de fotos; padrão `gsd-profile-photos`. |
+| `APP_ORIGINS` | Origens adicionais permitidas pelo CORS, separadas por vírgula. |
+| `DATABASE_PATH` | Caminho opcional do SQLite local; não pode apontar para o banco legado. |
+| `SOURCE_SQLITE_PATH` | Caminho privado do SQLite legado, usado apenas pelos scripts de migração. |
+| `LOCAL_UPLOAD_PATH` | Caminho local para uploads durante desenvolvimento. |
 
-MIT License - Veja o arquivo LICENSE para detalhes.
+O armazenamento local não é adequado para produção em serviços com disco efêmero. Crie os três buckets no Supabase como **privados**; o backend autentica as requisições e entrega os arquivos protegidos.
 
-## Contato
+Documentos novos podem ser marcados como disponíveis para todos os usuários ou somente para a equipe de gestão (presidente, vice-presidente e coordenadores). Documentos importados e existentes permanecem com acesso geral para preservar o comportamento anterior. Áudios continuam restritos à equipe da rádio.
 
-Para suporte técnico ou dúvidas sobre a plataforma, entre em contato com a equipe de desenvolvimento do GSD.
+## Limites dos planos gratuitos
 
+Render Free e Supabase Free permitem testar e demonstrar a aplicação sem custo, mas não garantem uma operação contínua de produção. Conforme a documentação consultada em 13/11/2026, o Render encerra serviços web gratuitos após 15 minutos sem tráfego, pode levar cerca de um minuto para reativá-los, descarta arquivos locais ao reiniciar e declara que o plano gratuito não deve hospedar aplicações de produção. O limite de horas gratuitas do workspace também pode suspender os serviços quando esgotado.
+
+O Supabase Free inclui atualmente até 500 MB de banco e 1 GB de arquivos, e pode pausar projetos sem atividade por uma semana. Esses limites, cotas de transferência e política de backups podem mudar; confira os painéis antes de importar dados. Portanto, use a configuração gratuita para validação/portfólio com dados de demonstração e sem informações pessoais reais. Uma operação pública com disponibilidade e dados reais requer aceitar essas limitações ou escolher um plano com garantias adequadas.
+
+Referências oficiais: [limites do Render Free](https://render.com/docs/free) e [preços e cotas do Supabase](https://supabase.com/pricing).
+
+## Migração do banco legado
+
+1. Faça e valide um backup privado do `database.db`; nunca o adicione ao Git.
+2. Crie um PostgreSQL vazio e configure `DATABASE_URL` e as credenciais do Supabase no `.env` local ou no ambiente seguro.
+3. Configure `SOURCE_SQLITE_PATH` para a cópia protegida do banco e execute `npm run migrate:sqlite`.
+4. O importador verifica integridade, IDs e e-mails duplicados, referências, valores de vendas, contagens e destino vazio; a importação ocorre em transação e pode ser repetida com segurança para a mesma origem.
+5. Com o mesmo `SOURCE_SQLITE_PATH`, os diretórios legados `uploads` e `uploads/audios` ao lado do banco e as credenciais privadas do Supabase disponíveis, execute `npm run migrate:uploads`. Antes de enviar qualquer arquivo, o script compara o inventário local com as referências do SQLite e interrompe a operação se houver arquivos sem referência ou referências ausentes. Depois, confere os hashes dos bytes enviados e pode ser repetido após uma falha parcial.
+6. Redefina as senhas migradas antes de habilitar o acesso às contas.
+
+O importador do banco não copia os bytes dos uploads legados; a transferência ocorre no comando separado acima. Não faça o deploy até que os arquivos existentes tenham sido transferidos e verificados no Storage.
+
+## Preparação Render e Supabase
+
+O Blueprint [`../render.yaml`](../render.yaml) define a raiz `GSD_Platform`, Node.js 22, comando de inicialização e health check. `DATABASE_URL`, `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` devem ser fornecidas no painel do Render. O Blueprint gera um segredo de sessão aleatório.
+
+Os planos gratuitos podem suspender serviços, impor limites de armazenamento/uso e não oferecer garantias de backup ou disponibilidade. Faça backups independentes do banco e valide limites e retenção atuais dos provedores antes de usar dados reais. O filesystem do serviço web não é persistente; os arquivos da aplicação ficam no Storage.
+
+Antes de criar os recursos, consulte o [guia de preparação para publicação](./DEPLOYMENT_GUIDE.md), que lista as variáveis, a configuração dos buckets privados e o procedimento de migração/rollback. Não aplique o Blueprint até estar pronto para iniciar um deploy.
+
+## Estado da implantação
+
+O código de autenticação, os schemas iniciais e o importador de banco estão preparados e testados localmente. Ainda é necessário validar a conexão com PostgreSQL/Supabase reais e concluir/verificar a transferência dos arquivos legados antes de qualquer publicação. Nenhum deploy público foi realizado.

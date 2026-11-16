@@ -1,264 +1,177 @@
-# Guia de Implantação - Plataforma GSD
+# Guia de preparação para publicação
 
-Este guia contém todas as informações necessárias para implantar a Plataforma GSD em produção.
+Este guia é para você configurar as contas e preparar as informações localmente. **Nenhuma migração remota, publicação, deploy ou envio de código deve ser feito nesta etapa.** Não envie senhas, URLs de conexão ou chaves pelo chat.
 
-## Modificações Realizadas
+## 1. Limites importantes do plano gratuito
 
-### 1. URLs Hardcoded Removidas
-- ✅ Substituídas todas as URLs `http://localhost:3000` por `window.location.origin`
-- ✅ Arquivos modificados:
-  - `public/login/login.js`
-  - `public/presidente/presidente.js`
-  - `public/coordenador/coordenador.js`
-  - `public/membro/membros.js`
+Render Free e Supabase Free servem para teste e demonstração, mas não oferecem disponibilidade de produção:
 
-### 2. Configuração do Banco de Dados
-- ✅ Alterado de `:memory:` para arquivo persistente
-- ✅ Suporte a variável de ambiente `DATABASE_PATH`
-- ✅ Banco padrão: `./database.db`
+- O Render Free pode suspender o serviço após inatividade, demora para acordar e perde arquivos locais ao reiniciar. A própria documentação recomenda não usar instâncias Free para aplicações de produção.
+- O Supabase Free tem cotas de banco, Storage e transferência e pode pausar projetos inativos.
+- Os limites e regras dos provedores mudam. Confira os painéis antes de criar projetos ou importar dados.
 
-### 3. Configuração do Servidor
-- ✅ Porta configurável via `process.env.PORT`
-- ✅ Servidor escuta em `0.0.0.0` para acesso externo
-- ✅ CORS habilitado para requisições cross-origin
+Use dados de demonstração durante a validação. Não coloque dados pessoais reais de estudantes nesses planos sem avaliar privacidade, segurança, retenção e disponibilidade.
 
-### 4. Estrutura de Arquivos
-- ✅ `package.json` criado com dependências corretas
-- ✅ `.env.example` para configuração de ambiente
-- ✅ `.gitignore` para controle de versão
-- ✅ `README.md` com documentação completa
+Fontes oficiais: [Render Free](https://render.com/docs/free) e [Supabase Pricing](https://supabase.com/pricing).
 
-## Pré-requisitos para Hospedagem
+## 2. Checklist de variáveis
 
-### Servidor
-- Node.js 18.0.0 ou superior
-- npm ou yarn
-- Pelo menos 512MB de RAM
-- 1GB de espaço em disco
+### Necessárias para o serviço hospedado
 
-### Dependências
-```json
-{
-  "express": "^4.18.2",
-  "sqlite3": "^5.1.6",
-  "cors": "^2.8.5",
-  "multer": "^1.4.5-lts.1"
-}
-```
+| Variável | Valor/origem | Onde configurar |
+| --- | --- | --- |
+| `NODE_ENV` | `production` | Blueprint do Render já define. |
+| `NODE_VERSION` | `22` | Blueprint do Render já define. |
+| `PORT` | Atribuída pelo Render. Não fixe um valor. | Render injeta automaticamente. |
+| `DATABASE_URL` | URI PostgreSQL do projeto Supabase, com TLS (`sslmode=require`). Contém a senha do banco; trate como segredo. | Render e, temporariamente, ambiente local para o script de migração. |
+| `SESSION_SECRET` | Segredo aleatório com pelo menos 32 caracteres. | Blueprint gera um valor; confirme que o Render o criou. |
+| `SUPABASE_URL` | URL do projeto Supabase. | Render e ambiente local durante migração de arquivos. |
+| `SUPABASE_SERVICE_ROLE_KEY` | No painel atual, prefira a chave **Secret** (`sb_secret_...`); o código recebe o valor por esta variável. A chave legada `service_role` também é privilegiada. Nunca use chave `anon`/publishable aqui nem exponha uma chave de servidor no navegador. | Campo secreto do Render e ambiente local durante migração de arquivos. |
 
-## Passos para Implantação
+### Opcionais ou locais
 
-### 1. Preparação do Ambiente
-```bash
-# 1. Faça upload dos arquivos para o servidor
-# 2. Instale as dependências
-npm install
+| Variável | Quando usar | Padrão/observação |
+| --- | --- | --- |
+| `SUPABASE_DOCUMENTS_BUCKET` | Somente se mudar o nome do bucket de documentos. | `gsd-documents` |
+| `SUPABASE_AUDIOS_BUCKET` | Somente se mudar o nome do bucket de áudio. | `gsd-audios` |
+| `SUPABASE_PROFILE_BUCKET` | Somente se mudar o nome do bucket de fotos. | `gsd-profile-photos` |
+| `APP_ORIGINS` | Só se o frontend ficar em outro domínio. Use origens exatas, separadas por vírgula. | Deixe vazio quando frontend e API estiverem no mesmo domínio Render. |
+| `SOURCE_SQLITE_PATH` | Apenas no computador que executará a migração. Caminho da cópia privada do SQLite. | Se omitido, o script usa `GSD_Platform/database.db`. Prefira informar o caminho da cópia de segurança. |
+| `DATABASE_PATH` | Apenas para execução/migração SQLite local. | `./database.local.db`; nunca aponte para o `database.db` original. |
+| `LOCAL_UPLOAD_PATH` | Apenas para uploads durante desenvolvimento local. | `./uploads-local`; não é persistente no Render Free. |
+| `DB_POOL_SIZE` | Ajuste opcional do pool PostgreSQL. | `5` |
+| `MAX_DOCUMENT_BYTES` | Limite opcional para documentos. | `26214400` (25 MiB) |
+| `MAX_AUDIO_BYTES` | Limite opcional para áudios. | `52428800` (50 MiB) |
+| `MAX_PROFILE_BYTES` | Limite opcional para fotos de perfil. | `5242880` (5 MiB) |
 
-# 3. Configure as variáveis de ambiente
-cp .env.example .env
-```
+`NODE_VERSION`, `NODE_ENV`, `SESSION_SECRET`, `DATABASE_URL`, `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` já estão previstos em [`render.yaml`](../render.yaml). Os três nomes de bucket acima são os padrões do código e não precisam ser repetidos no Render se forem mantidos.
 
-### 2. Configuração das Variáveis de Ambiente
-Edite o arquivo `.env`:
-```bash
-PORT=3000
-DATABASE_PATH=./database.db
-NODE_ENV=production
-```
+### Credenciais que você precisará obter
 
-### 3. Criação de Diretórios
-```bash
-# Certifique-se de que os diretórios existem
-mkdir -p uploads/audios
-chmod 755 uploads
-chmod 755 uploads/audios
-```
+1. **Supabase:** URL do projeto, chave Secret de servidor (ou, se necessário, a chave legada `service_role`) e URI PostgreSQL com a senha do banco.
+2. **Render:** conexão à conta GitHub pelo fluxo de autorização do site; não é necessário criar nem compartilhar um GitHub Personal Access Token para este procedimento.
+3. **Sessão:** o Render gera `SESSION_SECRET` pelo Blueprint. Não crie uma senha humana para esse campo.
 
-### 4. Inicialização
-```bash
-# Inicie o servidor
-npm start
+Não é necessário compartilhar nenhuma dessas informações comigo. Guarde a senha do PostgreSQL e a chave de serviço em um gerenciador de senhas; insira-as apenas nos campos oficiais do provedor ou em arquivo local ignorado pelo Git, quando chegarmos à etapa de conexão.
 
-# Ou para desenvolvimento
-npm run dev
-```
+## 3. Criar e preparar o projeto Supabase Free
 
-## Configuração de Proxy Reverso (Nginx)
+1. Acesse [Supabase](https://supabase.com/), crie/acesse sua conta e escolha criar um projeto na organização do plano **Free**.
+2. Dê um nome ao projeto, selecione uma região próxima e gere uma senha forte e única para o PostgreSQL. Guarde-a no gerenciador de senhas. Não a reutilize em outras contas.
+3. Aguarde o projeto ficar disponível. Confira no painel as cotas atuais do Free antes de usar dados reais.
+4. No painel do projeto, abra `Connect` e copie a URI PostgreSQL. O endpoint direto do plano Free é IPv6; para um backend persistente em rede IPv4, escolha o **Session pooler** (não Transaction pooler) e copie host, porta e usuário exatamente como exibidos. A aplicação usa conexões persistentes e transações. A URI precisa usar TLS (`sslmode=require`); preserve os parâmetros fornecidos pelo painel. Se o computador usado para migrar não alcançar o endpoint escolhido, pare e ajuste a modalidade de conexão antes de executar qualquer script.
+5. Na área de API/Connect, anote localmente a **Project URL** e a chave **Secret** de servidor (`sb_secret_...`). O código lê seu valor da variável `SUPABASE_SERVICE_ROLE_KEY`; isso é apenas o nome da variável, não uma instrução para escolher uma chave pública. A chave legada `service_role` continua privilegiada, mas prefira Secret quando disponível. Nunca coloque nenhuma chave de servidor em HTML, JavaScript público, README ou GitHub.
+6. Abra **Storage** e crie estes três buckets com acesso **Private**:
+   - `gsd-documents`
+   - `gsd-audios`
+   - `gsd-profile-photos`
+7. Mantenha os buckets privados e não crie políticas abertas para `anon`/usuários não autenticados. Com a chave Secret/service-role, o backend bypassa RLS do Storage; portanto, não há política de bucket que substitua a autorização do Express. As rotas autenticam o usuário e aplicam permissões antes de entregar arquivos. Se no futuro o frontend acessar Storage diretamente, será necessário desenhar e testar políticas RLS específicas antes de habilitar isso.
+8. Não faça upload manual de arquivos nem execute SQL de migração nesta fase. Os scripts versionados criam o schema e transferem os objetos depois da aprovação da conexão.
 
-### Exemplo de configuração Nginx:
-```nginx
-server {
-    listen 80;
-    server_name seu-dominio.com;
+**Política de arquivos da aplicação:** documentos novos podem ser gerais ou restritos à equipe de gestão; áudios são limitados à equipe da rádio; fotos de perfil são servidas por rotas autenticadas. Documentos do SQLite antigo são importados como gerais para preservar o acesso anterior. Buckets continuam privados em todos os casos.
 
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
+## 4. Preparar o Render sem publicar
 
-    # Configuração para arquivos estáticos
-    location /uploads/ {
-        proxy_pass http://localhost:3000/uploads/;
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-}
-```
+1. Acesse [Render](https://render.com/) e crie/acesse sua conta no plano Free.
+2. Autorize o acesso do Render ao repositório GitHub `bielizr/PlataformaGSD2025` somente pelo fluxo oficial de autorização. Não envie token do GitHub pelo chat.
+3. Confira que o repositório contém `render.yaml` na raiz e que o diretório do projeto é `GSD_Platform`.
+4. **Pare antes de criar/aplicar o Blueprint.** Aplicá-lo pode criar o Web Service e iniciar um deploy. Nesta etapa não selecione “Apply”, “Create Web Service” ou “Deploy”.
+5. Quando autorizarmos a publicação em uma etapa posterior, o Blueprint configura Node 22, raiz `GSD_Platform`, `npm ci --omit=dev`, `npm start` e health check em `/readyz`. Preencha então `DATABASE_URL`, `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` diretamente no formulário/painel do Render. Confirme que `SESSION_SECRET` foi gerado automaticamente.
+6. Não configure `APP_ORIGINS` se interface e API usarem o mesmo domínio. Não configure `DATABASE_PATH` ou `LOCAL_UPLOAD_PATH` em produção.
 
-## Configuração SSL/HTTPS
+O health check não prova que a migração terminou corretamente. O Render Free tem filesystem efêmero; o banco deve estar no PostgreSQL e os arquivos nos buckets privados.
 
-### Com Certbot (Let's Encrypt):
-```bash
-# Instale o certbot
-sudo apt install certbot python3-certbot-nginx
+## 5. Procedimento seguro para a migração SQLite → PostgreSQL
 
-# Obtenha o certificado
-sudo certbot --nginx -d seu-dominio.com
+Este procedimento é para a próxima etapa, **não o execute ainda**.
 
-# Configure renovação automática
-sudo crontab -e
-# Adicione: 0 12 * * * /usr/bin/certbot renew --quiet
-```
+### A. Backup e preparação local
 
-## Monitoramento e Logs
+1. Pare a aplicação antiga ou garanta que ninguém esteja escrevendo no SQLite durante a cópia.
+2. Faça uma cópia privada do `database.db` e das pastas `uploads` e `uploads/audios` para uma pasta local protegida. Preserve também o backup original existente. Não coloque essas cópias no repositório, OneDrive público ou chat.
+3. Calcule o SHA-256 do banco original e da cópia e confirme que coincidem. Guarde o resultado localmente.
+4. Rode `npm test` na versão do código que será migrada. Não continue se os testes falharem.
+5. Mantenha `SOURCE_SQLITE_PATH` apontando para a cópia de trabalho, cujo diretório contenha `uploads` e `uploads/audios`. O script de arquivos compara todos os arquivos com os nomes referenciados no SQLite e aborta se encontrar arquivo órfão, referência ausente ou entrada inesperada.
 
-### 1. Logs da Aplicação
-```bash
-# Redirecione logs para arquivo
-npm start > logs/app.log 2>&1
+### B. Banco PostgreSQL de destino
 
-# Ou use PM2 para gerenciamento
-npm install -g pm2
-pm2 start server.js --name "gsd-platform"
-pm2 logs gsd-platform
-```
+1. Confirme que o projeto Supabase escolhido é o destino correto e que ele não contém dados que devam ser preservados. O importador exige tabelas de destino vazias; não mistura nem sobrescreve conteúdo.
+2. Configure `DATABASE_URL` e `SOURCE_SQLITE_PATH` somente no ambiente local seguro. O `.env` e `.env.*` são ignorados pelo Git neste projeto; confirme isso com `git check-ignore`. Não publique a URI em comandos copiados, logs, prints ou histórico do terminal.
+3. Execute `npm run migrate:sqlite`. O script verifica a integridade SQLite, IDs e e-mails duplicados, referências, valores/totais de vendas e tipos, aplica o schema versionado e importa os dados em transação. As contagens são conferidas antes/depois; uma falha de dados reverte a transação de importação.
+4. Compare o resumo de contagens do terminal com o resultado no PostgreSQL. Para verificar contagens do destino, no SQL Editor do Supabase execute:
 
-### 2. Monitoramento de Sistema
-```bash
-# Monitore uso de recursos
-htop
-df -h
-du -sh uploads/
-```
+   ```sql
+   SELECT 'users' AS tabela, COUNT(*) AS total FROM users
+   UNION ALL SELECT 'reunioes', COUNT(*) FROM reunioes
+   UNION ALL SELECT 'presencas', COUNT(*) FROM presencas
+   UNION ALL SELECT 'relatorios', COUNT(*) FROM relatorios
+   UNION ALL SELECT 'comissoes', COUNT(*) FROM comissoes
+   UNION ALL SELECT 'membros_comissao', COUNT(*) FROM membros_comissao
+   UNION ALL SELECT 'tarefas', COUNT(*) FROM tarefas
+   UNION ALL SELECT 'arquivos', COUNT(*) FROM arquivos
+   UNION ALL SELECT 'eventos', COUNT(*) FROM eventos
+   UNION ALL SELECT 'produtos', COUNT(*) FROM produtos
+   UNION ALL SELECT 'vendas', COUNT(*) FROM vendas
+   UNION ALL SELECT 'audios', COUNT(*) FROM audios
+   UNION ALL SELECT 'comunicados', COUNT(*) FROM comunicados
+   UNION ALL SELECT 'eventos_radio', COUNT(*) FROM eventos_radio
+   UNION ALL SELECT 'itens_venda', COUNT(*) FROM itens_venda
+   ORDER BY tabela;
+   ```
 
-## Backup e Manutenção
+5. Verifique que o histórico de migração registra a origem esperada:
 
-### 1. Backup do Banco de Dados
-```bash
-# Script de backup diário
-#!/bin/bash
-DATE=$(date +%Y%m%d_%H%M%S)
-cp database.db "backups/database_$DATE.db"
+   ```sql
+   SELECT source_sha256, table_counts, completed_at
+   FROM migration_runs
+   ORDER BY completed_at DESC;
+   ```
 
-# Mantenha apenas os últimos 30 backups
-find backups/ -name "database_*.db" -mtime +30 -delete
-```
+6. Verifique referências órfãs:
 
-### 2. Backup de Uploads
-```bash
-# Backup dos arquivos enviados
-tar -czf "backups/uploads_$(date +%Y%m%d).tar.gz" uploads/
-```
+   ```sql
+   SELECT
+     (SELECT COUNT(*) FROM presencas p LEFT JOIN reunioes r ON r.id = p.reuniao_id WHERE r.id IS NULL) AS presencas_sem_reuniao,
+     (SELECT COUNT(*) FROM presencas p LEFT JOIN users u ON u.id = p.usuario_id WHERE u.id IS NULL) AS presencas_sem_usuario,
+     (SELECT COUNT(*) FROM membros_comissao m LEFT JOIN comissoes c ON c.id = m.comissao_id WHERE c.id IS NULL) AS membros_sem_comissao,
+     (SELECT COUNT(*) FROM itens_venda i LEFT JOIN vendas v ON v.id = i.venda_id LEFT JOIN produtos p ON p.id = i.produto_id WHERE v.id IS NULL OR p.id IS NULL) AS itens_venda_orfaos;
+   ```
 
-### 3. Limpeza de Logs
-```bash
-# Rotação de logs (adicione ao crontab)
-0 0 * * 0 find logs/ -name "*.log" -mtime +7 -delete
-```
+   Todos os resultados devem ser `0`. As demais relações são protegidas pelas chaves estrangeiras do schema.
 
-## Usuários Padrão
+7. Confirme que as contas importadas exigem redefinição de senha. O migrador descarta as senhas legadas e gera hashes aleatórios Argon2id; elas não permitem login. Não habilite acesso real antes de redefinir as senhas por processo administrativo seguro. O comando local `npm run reset-password -- usuario@exemplo.org` solicita a nova senha sem ecoá-la no terminal e revoga sessões; execute-o somente com a conexão e o usuário corretos.
 
-### Presidente
-- **Email**: gabrielcallegari@gsd.com
-- **Senha**: senha123
+### C. Storage
 
-### Coordenadores
-- **Finanças**: mariaeduarda@gsd.com / arthur@gsd.com
-- **Eventos**: mavi@gsd.com / estephani@gsd.com
-- **Esportes**: isaque@gsd.com / muralha@gsd.com
-- **Relações Sociais**: suyane@gsd.com / heloisa@gsd.com
-- **Senha**: senha123 (para todos)
+1. Só depois de conferir os registros, configure `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` localmente.
+2. Execute `npm run migrate:uploads`. O script valida o inventário antes de transferir arquivos, compara SHA-256 do original e do objeto armazenado e só então atualiza a referência no banco.
+3. O processo é repetível após falha parcial: ele verifica os objetos já transferidos e valida os bytes. Não apague objetos nem buckets para “tentar de novo”.
+4. Confira a tabela de execução da migração de Storage:
 
-### Membros
-- **Rádio GSD Mix**: vitoria@gsd.com, yan@gsd.com, wesley@gsd.com
-- **Direitos Humanos**: davi@gsd.com, lorrany@gsd.com, isabela@gsd.com
-- **Senha**: senha123 (para todos)
+   ```sql
+   SELECT source_sha256, file_counts, completed_at
+   FROM storage_migration_runs
+   ORDER BY completed_at DESC;
+   ```
 
-## Solução de Problemas
+### D. Backup e rollback
 
-### 1. Erro de Permissões
-```bash
-# Ajuste permissões dos diretórios
-chmod -R 755 public/
-chmod -R 755 uploads/
-```
+- Mantenha o SQLite original e a cópia de backup sem alterações. A migração abre o SQLite como somente leitura.
+- Antes da migração, mantenha também cópia privada dos dados/arquivos e, após o PostgreSQL ter dados, faça um backup/export independente compatível com as opções disponíveis no plano atual.
+- Se a importação de registros falhar, a transação de dados é revertida; o schema versionado pode permanecer no destino vazio. Não apague tabelas manualmente. Confira a causa e repita apenas se o estado/contagens permitirem.
+- Se o comando terminar sem resumo por perda de conexão, rode novamente com a mesma cópia. O hash da origem permite reconhecer uma execução completa e validar as contagens; divergências fazem o script falhar em vez de sobrescrever.
+- Se a validação falhar ou os dados divergirem, não conecte o Render e não exclua o projeto/banco. Preserve logs sem dados pessoais e pare para avaliar o destino.
+- Após a validação, antes de qualquer deploy, exporte também o PostgreSQL para um backup privado e confira que ele pode ser lido/restaurado em um destino isolado. O dump SQL não inclui os objetos do Storage; mantenha o SQLite e a cópia de uploads como backup independente. Não dependa do plano Free como única cópia.
+- Antes de uma publicação aprovada, o sistema antigo permanece a opção de retorno, sem escrita simultânea nos dois bancos. Depois de haver novas gravações no PostgreSQL, voltar ao SQLite antigo perderia essas gravações; esse rollback exige plano próprio e interrupção controlada de escrita.
 
-### 2. Erro de Banco de Dados
-```bash
-# Verifique se o arquivo existe e tem permissões
-ls -la database.db
-chmod 644 database.db
-```
+## 6. O que não fazer nesta etapa
 
-### 3. Erro de Porta em Uso
-```bash
-# Encontre o processo usando a porta
-lsof -i :3000
-# Mate o processo se necessário
-kill -9 <PID>
-```
+- Não envie credenciais pelo chat, e-mail ou issue pública.
+- Não torne buckets públicos nem adicione políticas abertas para `anon`.
+- Não execute `npm run migrate:sqlite` ou `npm run migrate:uploads` antes de revisar o destino, o backup e as variáveis.
+- Não aplique o Blueprint do Render, não publique o repositório e não faça deploy ainda.
+- Não remova nem substitua o SQLite original.
 
-### 4. Problemas de CORS
-- Verifique se o CORS está habilitado no servidor
-- Confirme que as URLs no frontend usam `window.location.origin`
+## Estado desta etapa
 
-## Segurança
-
-### 1. Recomendações Básicas
-- Altere as senhas padrão imediatamente
-- Configure firewall para permitir apenas portas necessárias
-- Mantenha o Node.js e dependências atualizados
-- Use HTTPS em produção
-
-### 2. Configuração de Firewall
-```bash
-# UFW (Ubuntu)
-sudo ufw allow ssh
-sudo ufw allow 80
-sudo ufw allow 443
-sudo ufw enable
-```
-
-## Performance
-
-### 1. Otimizações
-- Use PM2 para clustering
-- Configure cache no Nginx
-- Monitore uso de memória e CPU
-- Implemente rotação de logs
-
-### 2. Escalabilidade
-- Para alta demanda, considere load balancer
-- Monitore crescimento do banco de dados
-- Implemente limpeza automática de arquivos antigos
-
-## Contato e Suporte
-
-Para questões técnicas sobre a implantação:
-- Verifique os logs da aplicação
-- Consulte a documentação no README.md
-- Entre em contato com a equipe de desenvolvimento
-
----
-
-**Data de Criação**: $(date)
-**Versão da Plataforma**: 1.0.0
-**Status**: Pronta para Produção ✅
-
+O guia e o Blueprint foram preparados; nenhuma conta ou projeto externo foi criado/modificado, nenhuma credencial foi usada e nenhum deploy/migração remota foi realizado. Após você configurar os projetos, a etapa seguinte será conferir a configuração sem revelar segredos, testar a conexão e então solicitar confirmação antes de iniciar a migração remota.

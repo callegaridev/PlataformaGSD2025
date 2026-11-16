@@ -5,19 +5,34 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "node --watch server.js",
+    "test": "node --test",
+    "migrate:sqlite": "node scripts/migrate-sqlite-to-postgres.js",
+    "migrate:sqlite:local": "node scripts/migrate-sqlite-to-local.js",
+    "migrate:uploads": "node scripts/migrate-uploads-to-supabase.js",
+    "migrate:uploads:local": "node scripts/migrate-uploads-to-local.js",
+    "create-admin": "node scripts/create-admin.js",
+    "reset-password": "node scripts/reset-password.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "sqlite3": "^5.1.6",
+    "@supabase/supabase-js": "^2.119.0",
+    "argon2": "^0.45.2",
     "cors": "^2.8.5",
-    "multer": "^1.4.5-lts.1"
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.4",
+    "express-session": "^1.19.0",
+    "helmet": "^8.3.0",
+    "multer": "^2.5.0",
+    "pg": "^8.23.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "@electric-sql/pglite": "^0.5.16",
+    "sqlite3": "^6.0.1",
+    "supertest": "^7.3.2"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "22.x"
   },
   "keywords": [
     "gremio",
@@ -29,4 +44,3 @@
   "author": "GSD Team",
   "license": "MIT"
 }
-
